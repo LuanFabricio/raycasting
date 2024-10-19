@@ -1,7 +1,8 @@
 dependencies = $(shell find src/ -type f -name '*.c')
+flags = -O2
 
 all: build-folder
-	gcc -c $(dependencies)
+	gcc -c $(dependencies) $(flags)
 	mv *.o build
 
 main: all
