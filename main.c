@@ -31,6 +31,9 @@ int main(void)
 	for (u32 xx = 0; xx < 16; xx++)
 		for (u32 yy = 0; yy < 64; yy++) image_set_pixel(&img, xx, yy, 0xffff0000);
 
+	image_draw_rectangle_color(&img, 0, 0, 16, 16, 0xff0000ff);
+	image_draw_rectangle_color(&img, 32, 32, 64, 64, 0xffffffff);
+
 	while(!WindowShouldClose()) {
 		UpdateTexture(tex, img.pixel_buffer);
 
