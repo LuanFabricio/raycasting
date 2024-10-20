@@ -26,6 +26,12 @@ int main(void)
 		.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
 	});
 
+	u32 pixel_buffer_test[32 * 32] = {0};
+	image_t img_test = image_create(32, 32, pixel_buffer_test);
+	image_draw_rectangle_color(&img_test, 0, 0, 32, 32, (0xff0000 << 8 * 1) | (0xff / 2));
+
+	// for (u32 xx = 0; xx < 32 * 32; xx++) img_test.pixel_buffer[xx] = 0xff0000f0;
+
 	image_t img = image_create(64, 64, pixel_buffer);
 
 	for (u32 xx = 0; xx < 16; xx++)
@@ -33,6 +39,8 @@ int main(void)
 
 	image_draw_rectangle_color(&img, 0, 0, 16, 16, 0xff0000ff);
 	image_draw_rectangle_color(&img, 32, 32, 64, 64, 0xffffffff);
+
+	image_append_image(&img, &img_test, (vec2u32_t){ .x = 4, .y = 4});
 
 	while(!WindowShouldClose()) {
 		UpdateTexture(tex, img.pixel_buffer);
