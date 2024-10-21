@@ -1,15 +1,16 @@
 #include <stdio.h>
+#include <math.h>
 #include "raylib.h"
 
 #include "src/types.h"
 #include "src/image.h"
 
-#define SCREEN_WITDH 640
+#define SCREEN_WITDH 720
 #define SCREEN_HEIGHT 640
 
 int main(void)
 {
-	const box_t box1 = {
+	box_t box1 = {
 		.x = 42, .y = 42,
 		.w = 32, .h = 32,
 	};
@@ -42,13 +43,32 @@ int main(void)
 
 	image_append_image(&img, &img_test, (vec2u32_t){ .x = 4, .y = 4});
 
+	vec2f32_t speed = { 1.0f, 1.0f };
+	SetTargetFPS(60);
 	while(!WindowShouldClose()) {
+		image_clear(&img, 0);
+		double time_sin, time_cos;
+		time_sin = sin(GetTime());
+		time_cos = cos(GetTime());
+
+		const u32 img_color = (0xff << 8 * 3)
+			| (u32)(0xff * time_sin) << 8 * 2
+			| (u32)(0xff * time_cos) << 8 * 1
+			| (u32)(0xff * GetFrameTime()) << 8 * 0;
+		image_draw_rectangle_color(&img, 0, 0, box1.w, box1.h, img_color);
 		UpdateTexture(tex, img.pixel_buffer);
 
 		BeginDrawing();
-			DrawRectangle(box1.x, box1.y, box1.w, box1.h, *(Color*)(&color));
+			ClearBackground(BLACK);
+			// DrawRectangle(box1.x, box1.y, box1.w, box1.h, *(Color*)(&color));
 			DrawTexture(tex, box1.x, box1.y, WHITE);
 		EndDrawing();
+
+		f32 delta_time = GetFrameTime();
+		box1.x += speed.x * delta_time * 100;
+		if (box1.x <= 0 || box1.x + box1.w >= SCREEN_WITDH) speed.x = -speed.x;
+		box1.y += speed.y * delta_time * 100;
+		if (box1.y <= 0 || box1.y + box1.h >= SCREEN_HEIGHT) speed.y = -speed.y;
 	}
 
 	printf("Hello, world!\n");

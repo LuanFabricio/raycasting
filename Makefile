@@ -6,7 +6,7 @@ all: build-folder
 	mv *.o build
 
 main: all
-	gcc -o build/main.out main.c build/*.o -lraylib
+	gcc -o build/main.out main.c build/*.o -lraylib -lm
 
 build-folder:
 	mkdir -p build
