@@ -20,13 +20,12 @@ typedef struct {
 } image_t;
 
 typedef struct {
-	i32 x, y;
+	f32 x, y;
 	u32 w, h;
 } box_t;
 
 typedef struct {
 	image_t image_buffer;
 } scene_t;
-
 
 #endif // __SRC_TYPES_H__
