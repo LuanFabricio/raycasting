@@ -24,8 +24,11 @@ typedef struct {
 	u32 w, h;
 } box_t;
 
+typedef enum { BLOCK_EMPTY, BLOCK_BRICKS } block_e;
+
 typedef struct {
-	image_t image_buffer;
+	u32 width, height;
+	block_e *blocks;
 } scene_t;
 
 #endif // __SRC_TYPES_H__
