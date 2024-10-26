@@ -11,6 +11,33 @@
 #define SCREEN_WITDH 16*BLOCK_SIZE
 #define SCREEN_HEIGHT 9*BLOCK_SIZE
 
+#define PLAYER_SPEED 100
+
+void draw_player_cone(vec2f32_t pos, f32 angle)
+{
+	const f32 cone_angle_padding =  -PI / 4; // -45°
+	const f32 base_rotation = -PI / 2; // 90°
+	const f32 left_angle = -cone_angle_padding + base_rotation + angle;
+	const f32 right_angle = cone_angle_padding + base_rotation + angle;
+
+	Vector2 p1 = *(Vector2*)&pos;
+	Vector2 p_left = {
+		.x = cos(left_angle) * 50.0 + pos.x,
+		.y = sin(left_angle) * 50.0 + pos.y,
+	};
+	Vector2 p_right = {
+		.x = cos(right_angle) * 50.0 + pos.x,
+		.y = sin(right_angle) * 50.0 + pos.y,
+	};
+
+	p1.x += 2;
+	p1.y += 2;
+
+	DrawLineV(p1, p_left, WHITE);
+	DrawLineV(p1, p_right, WHITE);
+	DrawLineV(p_left, p_right, WHITE);
+}
+
 int main(void)
 {
 	box_t box1 = {
@@ -51,6 +78,7 @@ int main(void)
 		.width = SCREEN_WITDH / BLOCK_SIZE,
 		.height = SCREEN_HEIGHT / BLOCK_SIZE,
 		.blocks = blocks,
+		.player_position = {.x = 3, .y = 3 },
 	};
 	scene.blocks[0] = BLOCK_BRICKS;
 	scene.blocks[2] = BLOCK_BRICKS;
@@ -86,6 +114,7 @@ int main(void)
 				}
 			}
 		}
+		image_draw_rectangle_color(&scene_img, scene.player_position.x, scene.player_position.y, 4, 4, 0xff00ff00);
 		UpdateTexture(scene_tex, scene_img.pixel_buffer);
 
 		image_clear(&img, 0);
@@ -106,6 +135,8 @@ int main(void)
 			// DrawRectangle(box1.x, box1.y, box1.w, box1.h, *(Color*)(&color));
 			DrawTexture(tex, box1.x, box1.y, WHITE);
 			DrawTexture(scene_tex, 0, 0, WHITE);
+
+			draw_player_cone(scene.player_position, scene.player_angle);
 		EndDrawing();
 
 		f32 delta_time = GetFrameTime();
@@ -113,6 +144,31 @@ int main(void)
 		if (box1.x <= 0 || box1.x + box1.w >= SCREEN_WITDH) speed.x = -speed.x;
 		box1.y += speed.y * delta_time * 100;
 		if (box1.y <= 0 || box1.y + box1.h >= SCREEN_HEIGHT) speed.y = -speed.y;
+
+		printf("Player pos: %.02f, %.02f\n", scene.player_position.x, scene.player_position.y);
+		if (IsKeyDown(KEY_W)) {
+			scene.player_position.y -= PLAYER_SPEED * delta_time;
+		}
+
+		if (IsKeyDown(KEY_S)) {
+			scene.player_position.y += PLAYER_SPEED * delta_time;
+		}
+
+		if (IsKeyDown(KEY_A)) {
+			scene.player_position.x -= PLAYER_SPEED * delta_time;
+		}
+
+		if (IsKeyDown(KEY_D)) {
+			scene.player_position.x += PLAYER_SPEED * delta_time;
+		}
+
+		if (IsKeyDown(KEY_LEFT)) {
+			scene.player_angle -= 1.0f * delta_time;
+		}
+
+		if (IsKeyDown(KEY_RIGHT)) {
+			scene.player_angle += 1.0f * delta_time;
+		}
 	}
 
 	printf("Hello, world!\n");

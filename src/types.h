@@ -29,6 +29,8 @@ typedef enum { BLOCK_EMPTY, BLOCK_BRICKS } block_e;
 typedef struct {
 	u32 width, height;
 	block_e *blocks;
+	vec2f32_t player_position;
+	f32 player_angle;
 } scene_t;
 
 #endif // __SRC_TYPES_H__
