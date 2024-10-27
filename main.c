@@ -5,7 +5,7 @@
 #include "src/types.h"
 #include "src/utils.h"
 
-#define BLOCK_SIZE 16
+#define BLOCK_SIZE 32
 
 #define SCALE 80
 
@@ -21,7 +21,28 @@
 
 void draw_step_function(const scene_t *scene)
 {
+	const f32 base_rotation = -PI / 2; // 90°
+	const f32 final_angle = base_rotation + scene->player_angle;
+	const f32 x_rotation = cos(final_angle);
+	const f32 y_rotation = sin(final_angle);
 
+	const f32 ray_len = 45.0;
+	const u32 steps = 3;
+	const f32 ray_step = ray_len / steps;
+
+	Vector2 p1 = *(Vector2*)&scene->player_position;
+	Vector2 p2 = {};
+
+	for (u32 i = 1; i <= steps; i++) {
+		p2.x = x_rotation * ray_step + p1.x;
+		p2.y = y_rotation * ray_step + p1.y;
+
+		DrawLineV(p1, p2, WHITE);
+		DrawCircleV(p2, 2, WHITE);
+
+		p1.x = p2.x;
+		p1.y = p2.y;
+	}
 }
 
 void draw_grid(const block_e *blocks, u32 width, u32 height)
@@ -52,10 +73,6 @@ void draw_player_view(const Vector2 pos, f32 angle)
 	double angle_step =  (left_angle - right_angle) / (rays-1);
 
 	Vector2 p2 = {};
-	p2.x = cos(base_rotation + angle) * ray_len + p1.x;
-	p2.y = sin(base_rotation + angle) * ray_len + p1.y;
-	DrawLineV(p1, p2, WHITE);
-
 	for (i32 i = 0; i < rays; i++) {
 		p2.x = cos(left_angle - angle_step * i) * ray_len + p1.x;
 		p2.y = sin(left_angle - angle_step * i) * ray_len + p1.y;
@@ -142,6 +159,7 @@ int main(void)
 			ClearBackground(BLACK);
 			draw_grid(scene.blocks, scene.width, scene.height);
 			draw_player_view(*(Vector2*)&scene.player_position, scene.player_angle);
+			draw_step_function(&scene);
 		EndTextureMode();
 
 		BeginDrawing();
@@ -150,7 +168,7 @@ int main(void)
 			DrawTexturePro(minimap.texture,
 					(Rectangle) {.x = 0, .y = 0, .width = minimap.texture.width, .height = -minimap.texture.height},
 					// (Rectangle){.x = 0, .y = 0, .width = minimap.texture.width, .height = -minimap.texture.height},
-					(Rectangle) {.x = 2, .y = 2, .width = SCREEN_WITDH, .height = SCREEN_HEIGHT},
+					(Rectangle) {.x = 2, .y = 2, .width = GetScreenWidth(), .height = GetScreenHeight()},
 					(Vector2) {0, 0},
 					0,
 					WHITE);
