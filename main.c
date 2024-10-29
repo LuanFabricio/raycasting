@@ -19,6 +19,33 @@
 
 #define FAR_DISTANCE 10
 
+bool is_inside_a_box(const block_e* blocks, const u32 blocks_len, const u32 width, vec2f32_t point)
+{
+	for (u32 i = 0; i < blocks_len; i++) {
+		block_e block = blocks[i];
+
+		if (block == BLOCK_BRICKS) {
+			vec2u32_t min_point = index_to_xy(i, width);
+			min_point.x *= BLOCK_SIZE;
+			min_point.y *= BLOCK_SIZE;
+
+			vec2u32_t max_point = {
+				.x = min_point.x + BLOCK_SIZE,
+				.y = min_point.y + BLOCK_SIZE,
+			};
+
+			const bool x_match = min_point.x <= point.x && point.x <= max_point.x;
+			const bool y_match = min_point.y <= point.y && point.y <= max_point.y;
+
+			if (x_match && y_match) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 void draw_step_function(const scene_t *scene)
 {
 	const f32 base_rotation = -PI / 2; // 90°
@@ -27,18 +54,25 @@ void draw_step_function(const scene_t *scene)
 	const f32 y_rotation = sin(final_angle);
 
 	const f32 ray_len = 45.0;
-	const u32 steps = 3;
+	const u32 steps = 5;
 	const f32 ray_step = ray_len / steps;
 
 	Vector2 p1 = *(Vector2*)&scene->player_position;
 	Vector2 p2 = {};
 
+	const u32 blocks_len = scene->width * scene->height;
+	Color color = WHITE;
 	for (u32 i = 1; i <= steps; i++) {
 		p2.x = x_rotation * ray_step + p1.x;
 		p2.y = y_rotation * ray_step + p1.y;
 
-		DrawLineV(p1, p2, WHITE);
-		DrawCircleV(p2, 2, WHITE);
+		// TODO: Maybe draw an intesection point
+		if (is_inside_a_box(scene->blocks, blocks_len, scene->width, CAST_TYPE(vec2f32_t, p2))) {
+			color = PURPLE;
+		}
+
+		DrawLineV(p1, p2, color);
+		DrawCircleV(p2, 2, color);
 
 		p1.x = p2.x;
 		p1.y = p2.y;
