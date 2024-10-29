@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+#define CAST_TYPE(target, var) *(target*)&var
+
 static u32 blend_colors(const u32 src, const u32 target)
 {
 	const f32 src_alpha = (f32)(src & 0xff) / 0xff;
@@ -19,6 +21,15 @@ static u32 blend_colors(const u32 src, const u32 target)
 static u32 xy_to_index(const u32 x, const u32 y, const u32 width)
 {
 	return width * y + x;
+}
+
+static vec2u32_t index_to_xy(u32 index, u32 width) {
+	vec2u32_t r = {0};
+
+	r.x = index % width;
+	r.y = (index - r.x) / width;
+
+	return r;
 }
 
 #endif // __SRC_UTILS_H__
