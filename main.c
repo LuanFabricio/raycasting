@@ -19,7 +19,76 @@
 
 #define FAR_DISTANCE 10
 
-bool is_inside_a_box(const block_e* blocks, const u32 blocks_len, const u32 width, vec2f32_t point)
+bool get_intersection(vec2f32_t s1, vec2f32_t e1, vec2f32_t s2, vec2f32_t e2, vec2f32_t *out)
+{
+	f32 dx = e1.x - s1.x;
+	f32 dy = e1.y - s1.y;
+
+	bool vertical1 = dx == 0.0;
+	f32 a1 = dx != 0.0 ? dy / dx : 0.0;
+	f32 b1 = e1.y - a1 * e1.x;
+
+	dx = e2.x - s2.x;
+	dy = e2.y - s2.y;
+
+	bool vertical2 = dx == 0.0;
+	f32 a2 = dx != 0.0 ? dy / dx : 0.0;
+	f32 b2 = e2.y - a2 * e2.x;
+
+	if (a1 == a2 && vertical1 == vertical2) return false;
+	if (vertical1 && vertical2) return false;
+
+	if (vertical1) {
+		out->x = s1.x;
+		out->y = a2*out->x + b2;
+	} else if (vertical2) {
+		out->x = s2.x;
+		out->y = a1*out->x + b1;
+	} else {
+		out->x = (b2 - b1) / (a1 - a2);
+		out->y = a1*out->x + b1;
+	}
+
+	// Line 1
+	f32 min_x = s1.x < e1.x ? s1.x : e1.x;
+	f32 max_x = s1.x > e1.x ? s1.x : e1.x;
+
+	f32 min_y = s1.y < e1.y ? s1.y : e1.y;
+	f32 max_y = s1.y > e1.y ? s1.y : e1.y;
+
+	if (min_x > out->x || out->x > max_x) return false;
+	if (min_y > out->y || out->y > max_y) return false;
+
+	// Line 2
+	min_x = s2.x < e2.x ? s2.x : e2.x;
+	max_x = s2.x > e2.x ? s2.x : e2.x;
+
+	min_y = s2.y < e2.y ? s2.y : e2.y;
+	max_y = s2.y > e2.y ? s2.y : e2.y;
+
+	if (min_x > out->x || out->x > max_x) return false;
+	if (min_y > out->y || out->y > max_y) return false;
+
+	return true;
+}
+
+void get_block_points(u32 x, u32 y, vec2f32_t *out)
+{
+	// (x, y)
+	out[0].x = x * BLOCK_SIZE;
+	out[0].y = y * BLOCK_SIZE;
+	// (x+1, y)
+	out[1].x = (x+1) * BLOCK_SIZE;
+	out[1].y = y * BLOCK_SIZE;
+	// (x+1, y+1)
+	out[2].x = (x+1) * BLOCK_SIZE;
+	out[2].y = (y+1) * BLOCK_SIZE;
+	// (x, y+1)
+	out[3].x = x * BLOCK_SIZE;
+	out[3].y = (y+1) * BLOCK_SIZE;
+}
+
+i32 is_inside_a_box(const block_e* blocks, const u32 blocks_len, const u32 width, vec2f32_t point)
 {
 	for (u32 i = 0; i < blocks_len; i++) {
 		block_e block = blocks[i];
@@ -38,12 +107,12 @@ bool is_inside_a_box(const block_e* blocks, const u32 blocks_len, const u32 widt
 			const bool y_match = min_point.y <= point.y && point.y <= max_point.y;
 
 			if (x_match && y_match) {
-				return true;
+				return i;
 			}
 		}
 	}
 
-	return false;
+	return -1;
 }
 
 void draw_step_function(const scene_t *scene)
@@ -66,13 +135,69 @@ void draw_step_function(const scene_t *scene)
 		p2.x = x_rotation * ray_step + p1.x;
 		p2.y = y_rotation * ray_step + p1.y;
 
-		// TODO: Maybe draw an intesection point
-		if (is_inside_a_box(scene->blocks, blocks_len, scene->width, CAST_TYPE(vec2f32_t, p2))) {
+		i32 block_index = is_inside_a_box(scene->blocks, blocks_len, scene->width, CAST_TYPE(vec2f32_t, p2));
+
+		bool res = false;
+		vec2f32_t intersection_point = {0};
+
+		if (block_index != -1) {
 			color = PURPLE;
+
+			vec2u32_t point = index_to_xy(block_index, scene->width);
+			vec2f32_t block_points[4] = {0};
+			get_block_points(point.x, point.y, block_points);
+
+			u32 lines[] = { 0, 1, 1, 2, 2, 3, 3, 0};
+			for (u32 i = 0; i < 8; i+=2) {
+				res = get_intersection(
+					CAST_TYPE(vec2f32_t, p1), CAST_TYPE(vec2f32_t, p2),
+					block_points[lines[i]], block_points[lines[i+1]],
+					&intersection_point);
+
+				if (res) break;
+			}
+
+			/*
+			// 1 -> 2
+			res = get_intersection(
+					CAST_TYPE(vec2f32_t, p1), CAST_TYPE(vec2f32_t, p2),
+					block_points[0], block_points[1],
+					&intersection_point);
+			if (res) {
+				goto end;
+			}
+			// 2 -> 3
+			res = get_intersection(
+					CAST_TYPE(vec2f32_t, p1), CAST_TYPE(vec2f32_t, p2),
+					block_points[1], block_points[2],
+					&intersection_point);
+			if (res) {
+				goto end;
+			}
+			// 3 -> 4
+			res = get_intersection(
+					CAST_TYPE(vec2f32_t, p1), CAST_TYPE(vec2f32_t, p2),
+					block_points[2], block_points[3],
+					&intersection_point);
+			if (res) {
+				goto end;
+			}
+			// 4 -> 1
+			res = get_intersection(
+					CAST_TYPE(vec2f32_t, p1), CAST_TYPE(vec2f32_t, p2),
+					block_points[3], block_points[0],
+					&intersection_point);
+			if (res) {
+				goto end;
+			}
+			*/
 		}
 
 		DrawLineV(p1, p2, color);
 		DrawCircleV(p2, 2, color);
+		if(res) {
+			DrawCircleV(CAST_TYPE(Vector2, intersection_point), 1, GREEN);
+		}
 
 		p1.x = p2.x;
 		p1.y = p2.y;
@@ -213,6 +338,5 @@ int main(void)
 		update_player(&scene, delta_time);
 	}
 
-	printf("Hello, world!\n");
 	return 0;
 }
