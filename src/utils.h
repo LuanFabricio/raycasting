@@ -32,4 +32,9 @@ static vec2u32_t index_to_xy(u32 index, u32 width) {
 	return r;
 }
 
+static f32 lerp(f32 start, f32 end, f32 amount)
+{
+	return start + amount * (end-start);
+}
+
 #endif // __SRC_UTILS_H__
