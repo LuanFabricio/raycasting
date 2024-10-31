@@ -1,6 +1,7 @@
 #include <math.h>
 
 #include "types.h"
+#include "utils.h"
 #include "vec2f32.h"
 
 vec2f32_t vec2f32_from_angle(f32 angle)
@@ -43,4 +44,10 @@ void vec2f32_scale(const vec2f32_t *v, f32 scale, vec2f32_t *dest)
 {
 	dest->x = v->x * scale;
 	dest->y = v->y * scale;
+}
+
+void vec2f32_lerp(const vec2f32_t *v1, const vec2f32_t *v2, f32 amount, vec2f32_t *dest)
+{
+	dest->x = lerp(v1->x, v2->x, amount);
+	dest->y = lerp(v1->y, v2->y, amount);
 }
