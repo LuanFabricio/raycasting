@@ -2,8 +2,12 @@
 #define __SRC_UTILS_H__
 
 #include "types.h"
+#include <math.h>
+#include <float.h>
 
 #define CAST_TYPE(target, var) *(target*)&var
+
+#define DOUBLE_EQUAL(d1, d2) (fabs((d1) - (d2)) > DBL_EPSILON)
 
 static u32 blend_colors(const u32 src, const u32 target)
 {
