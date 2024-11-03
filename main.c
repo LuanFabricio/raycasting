@@ -1,29 +1,34 @@
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
+#include <limits.h>
 #include "raylib.h"
 
 #include "src/types.h"
 #include "src/utils.h"
 #include "src/vec2f32.h"
 
-#define BLOCK_SIZE 16
+#define BLOCK_SIZE 8
 
 #define SCALE 80
 
 #define SCREEN_WITDH 16*SCALE
 #define SCREEN_HEIGHT 9*SCALE
 
-#define PLAYER_SPEED 100
+#define PLAYER_SPEED 10
 
 #define MIN(x, y) (x) > (y) ? (y) : (x)
 #define MAX(x, y) (x) < (y) ? (y) : (x)
 
 #define BASE_ROTATION (-PI / 2)
 
-#define FAR_DISTANCE 45.0
+#define FAR_DISTANCE  25.0
 #define NEAR_DISTANCE 15.0
-#define FOV (-PI / 4) // -45°
+#define FOV (-PI / 2) // -90°
+
+#define EPSILON 1e-3
+
+// #define LOG
 
 void get_fov_plane(const vec2f32_t pos, const f32 angle, vec2f32_t out[2])
 {
@@ -63,12 +68,30 @@ bool get_intersection(vec2f32_t s1, vec2f32_t e1, vec2f32_t s2, vec2f32_t e2, ve
 	f32 a1 = vertical1 ? 0.0 : dy / dx;
 	f32 b1 = e1.y - a1 * e1.x;
 
+#ifdef LOG
+	printf("P1:\n");
+	printf("\tdx: %.02f\n", dx);
+	printf("\tdy: %.02f\n", dy);
+	printf("\talpha: %.02f\n", a1);
+	printf("\tlin: %.02f\n", b1);
+	printf("\tvertical: %b\n", vertical1);
+#endif // LOG
+
 	dx = e2.x - s2.x;
 	dy = e2.y - s2.y;
 
 	bool vertical2 = dx == 0.0;
 	f32 a2 = vertical2 ? 0.0 : dy / dx;
 	f32 b2 = e2.y - a2 * e2.x;
+
+#ifdef LOG
+	printf("P2:\n");
+	printf("\tdx: %.02f\n", dx);
+	printf("\tdy: %.02f\n", dy);
+	printf("\talpha: %.02f\n", a2);
+	printf("\tlin: %.02f\n", b2);
+	printf("\tvertical: %b\n", vertical2);
+#endif // LOG
 
 	if (a1 == a2 && vertical1 == vertical2) return false;
 	if (vertical1 && vertical2) return false;
@@ -84,6 +107,10 @@ bool get_intersection(vec2f32_t s1, vec2f32_t e1, vec2f32_t s2, vec2f32_t e2, ve
 		out->y = a1*out->x + b1;
 	}
 
+#ifdef LOG
+	printf("Out: %.05f, %.05f\n", out->x, out->y);
+#endif // LOG
+
 	// Line 1
 	f32 min_x = s1.x < e1.x ? s1.x : e1.x;
 	f32 max_x = s1.x > e1.x ? s1.x : e1.x;
@@ -91,9 +118,14 @@ bool get_intersection(vec2f32_t s1, vec2f32_t e1, vec2f32_t s2, vec2f32_t e2, ve
 	f32 min_y = s1.y < e1.y ? s1.y : e1.y;
 	f32 max_y = s1.y > e1.y ? s1.y : e1.y;
 
-	if (min_x > out->x || out->x > max_x) return false;
-	if (min_y > out->y || out->y > max_y) return false;
+#ifdef LOG
+	printf("Out: %.05f, %.05f\n", out->x, out->y);
+	printf("P1 min/max x: %.05f, %.05f\n", min_x, max_x);
+	printf("P1 min/max y: %.05f, %.05f\n", min_y, max_y);
+#endif // LOG
 
+	if ((min_x - out->x) > EPSILON || (out->x - max_x) > EPSILON) return false;
+	if ((min_y - out->y) > EPSILON || (out->y - max_y) > EPSILON) return false;
 	// Line 2
 	min_x = s2.x < e2.x ? s2.x : e2.x;
 	max_x = s2.x > e2.x ? s2.x : e2.x;
@@ -101,8 +133,13 @@ bool get_intersection(vec2f32_t s1, vec2f32_t e1, vec2f32_t s2, vec2f32_t e2, ve
 	min_y = s2.y < e2.y ? s2.y : e2.y;
 	max_y = s2.y > e2.y ? s2.y : e2.y;
 
-	if (min_x > out->x || out->x > max_x) return false;
-	if (min_y > out->y || out->y > max_y) return false;
+#ifdef LOG
+	printf("P2 min/max x: %.05f, %.05f\n", min_x, max_x);
+	printf("P2 min/max y: %.05f, %.05f\n", min_y, max_y);
+#endif // LOG
+
+	if ((min_x - out->x) > EPSILON || (out->x - max_x) > EPSILON) return false;
+	if ((min_y - out->y) > EPSILON || (out->y - max_y) > EPSILON) return false;
 
 	return true;
 }
@@ -165,9 +202,11 @@ bool hit_block(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, vec
 		vec2u32_t block_pos = index_to_xy(i, scene->width);
 		get_block_points(block_pos.x, block_pos.y, points);
 		for (u32 j = 0; j < sizeof(lines)/sizeof(u32); j+=2) {
+#ifdef LOG
 			printf("[%u, %u->%u]:\n", i, j, j+1);
 			printf("\t(%.02f, %.02f) -> (%.02f, %.02f)\n", p1.x, p1.y, p2.x, p2.y);
 			printf("\t(%.02f, %.02f) -> (%.02f, %.02f)\n", points[lines[j]].x, points[lines[j]].y, points[lines[j+1]].x, points[lines[j+1]].y);
+#endif // LOG
 			if (get_intersection(p1, p2, points[lines[j]], points[lines[j+1]], &current_hit)) {
 				f32 current_dist = point_distance(p1, current_hit);
 				if (current_dist < dist) {
@@ -185,62 +224,44 @@ bool hit_block(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, vec
 
 void render_scene(const scene_t *scene)
 {
-	const f32 base_rotation = -PI / 2; // 90°
-
-	Vector2 p1 = *(Vector2*)&scene->player_position;
-
-	const f32 angle = scene->player_angle;
-	const f32 left_angle = FOV/2 + base_rotation + angle;
-	const f32 right_angle = -FOV/2 + base_rotation + angle;
-
-	const u32 rays = 5;
-	double angle_step =  2 * FOV/2 / (rays-1);
-	printf("Delta angle: %.02f\n", left_angle - right_angle);
-	printf("Angle step: %.02f\n", angle_step);
-
-	Vector2 p2 = {};
-	Vector2 p3 = {};
-
-	const u32 block_len = scene->width*scene->height;
-	const u32 width_slice = GetScreenWidth() / rays;
-	const u32 height_slice = GetScreenHeight() / rays;
-
-	const f32 near_clipping_plane = 0.5;
-	vec2f32_t plane_middle = {
-		.x = cos(base_rotation + angle) * near_clipping_plane,
-		.y = sin(base_rotation + angle) * near_clipping_plane,
-	};
-
-	f32 left = tan(FOV/2) * near_clipping_plane;
-	vec2f32_t pl = {};
-
-	vec2f32_add(&plane_middle, &scene->player_position, &pl);
-	vec2f32_rot90(&pl, &pl);
-	vec2f32_norm(&pl, &pl);
-	vec2f32_norm(&pl, &pl);
-	vec2f32_scale(&pl, left, &pl);
-
-	const u32 screen_width = 10;
-	const u32 strip_width = (float)GetScreenWidth() / (float)screen_width;
+	const u32 screen_width = 512;
+	const u32 strip_width = 1 + GetScreenWidth() / screen_width;
 
 	vec2f32_t fov_plane[2] = {0};
 	get_fov_plane(scene->player_position, scene->player_angle, fov_plane);
 
+	vec2f32_t player_ray = vec2f32_from_angle(scene->player_angle + BASE_ROTATION);
+	vec2f32_scale(&player_ray, 1/vec2f32_length(&player_ray), &player_ray);
 	for (u32 x = 0; x < screen_width; x++) {
 		vec2f32_t ray = {0};
 		const f32 amount = (float)x / (float)screen_width;
+		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
+		vec2f32_t hit = {0};
+		const bool res = hit_block(scene, scene->player_position, ray, &hit);
+
+#ifdef LOG
 		printf("Lerp: \n");
 		printf("\tFov left: (%.02f, %.02f)\n", fov_plane[0].x, fov_plane[0].y);
 		printf("\tFov right: (%.02f, %.02f)\n", fov_plane[1].x, fov_plane[1].y);
 		printf("\tAmount: %.02f\n", amount);
-		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
 		printf("\tRay: (%.02f, %.02f)\n", ray.x, ray.y);
+		printf("[%u - Hit? %b] (%.02f, %.02f) -> (%.02f, %.02f)\n", x, res, ray.x, ray.y, hit.x, hit.y);
+#endif // LOG
 
-		vec2f32_t hit = {0};
-		const bool res = hit_block(scene, scene->player_position, ray, &hit);
-		printf("[Hit? %b] (%.02f, %.02f) -> (%.02f, %.02f)\n", res, ray.x, ray.y, hit.x, hit.y);
 		if (res) {
-			DrawRectangle(x*strip_width, 0, strip_width, GetScreenHeight(), RED);
+			vec2f32_t v = {0};
+			printf("Hit: %.02f %.02f\n", hit.x, hit.y);
+			printf("Player pos: %.02f %.02f\n", scene->player_position.x, scene->player_position.y);
+			vec2f32_sub(&hit, &scene->player_position, &v);
+			printf("V: %.02f, %.02f\n", v.x, v.y);
+			printf("Player ray: %.02f, %.02f\n", player_ray.x, player_ray.y);
+			const f32 z = vec2f32_dot(&v, &player_ray);
+			const f32 strip_height = (f32)GetScreenHeight() / z;
+			const u32 y = (GetScreenHeight() - strip_height) / 2;
+			printf("[%u]Height strip: %.02f/%.02f\n", x, strip_height, z);
+			Color color = RED;
+			color.r /= z;
+			DrawRectangle(x*strip_width, y, strip_width, strip_height, color);
 		}
 	}
 }
@@ -386,12 +407,11 @@ void update_player(scene_t *scene, f32 delta_time)
 	scene->player_position.y = MAX(MIN(new_y, max_y), 0);
 
 	if (IsKeyDown(KEY_LEFT)) {
-		scene->player_angle -= 1.0f * delta_time;
+		scene->player_angle -= 0.75f * delta_time;
 	}
 
 	if (IsKeyDown(KEY_RIGHT)) {
-		scene->player_angle += 1.0f * delta_time;
-	}
+		scene->player_angle += 0.75f * delta_time; }
 }
 
 int main(void)
@@ -404,16 +424,24 @@ int main(void)
 		.width = 9,
 		.height = 9,
 		.blocks = blocks,
-		.player_angle = 0,
+		.player_angle = -PI / 4,
 	};
 	scene.player_position.x = scene.width * BLOCK_SIZE / 2.f;
 	scene.player_position.y = scene.height * BLOCK_SIZE / 2.f;
 
 	scene.blocks[0] = BLOCK_BRICKS;
+	scene.blocks[xy_to_index(3, 3, scene.width)] = BLOCK_BRICKS;
+	scene.blocks[xy_to_index(2, 3, scene.width)] = BLOCK_BRICKS;
+	scene.blocks[xy_to_index(3, 2, scene.width)] = BLOCK_BRICKS;
 	// scene.blocks[2] = BLOCK_BRICKS;
 	// scene.blocks[4] = BLOCK_BRICKS;
 	// scene.blocks[6] = BLOCK_BRICKS;
 	// scene.blocks[8] = BLOCK_BRICKS;
+	// scene.blocks[10] = BLOCK_BRICKS;
+	// scene.blocks[12] = BLOCK_BRICKS;
+	// scene.blocks[14] = BLOCK_BRICKS;
+	// scene.blocks[16] = BLOCK_BRICKS;
+	// scene.blocks[18] = BLOCK_BRICKS;
 
 	// for (u32 i = 0; i < scene.width * scene.height; i ++) {
 	// 	scene.blocks[i] = BLOCK_BRICKS;
