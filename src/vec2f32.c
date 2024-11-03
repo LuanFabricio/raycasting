@@ -51,3 +51,8 @@ void vec2f32_lerp(const vec2f32_t *v1, const vec2f32_t *v2, f32 amount, vec2f32_
 	dest->x = lerp(v1->x, v2->x, amount);
 	dest->y = lerp(v1->y, v2->y, amount);
 }
+
+f32 vec2f32_dot(const vec2f32_t *v1, const vec2f32_t *v2)
+{
+	return v1->x * v2->x + v1->y * v2->y;
+}
