@@ -14,7 +14,7 @@ vec2f32_t vec2f32_from_angle(f32 angle)
 
 void vec2f32_norm(const vec2f32_t *v, vec2f32_t *dest)
 {
-	f32 len = sqrt(v->x * v->x + v->y * v->y);
+	f32 len = vec2f32_length(v);
 	dest->x /= len;
 	dest->y /= len;
 }
@@ -55,4 +55,11 @@ void vec2f32_lerp(const vec2f32_t *v1, const vec2f32_t *v2, f32 amount, vec2f32_
 f32 vec2f32_dot(const vec2f32_t *v1, const vec2f32_t *v2)
 {
 	return v1->x * v2->x + v1->y * v2->y;
+}
+
+f32 vec2f32_length(const vec2f32_t* v)
+{
+	f32 x2 = v->x * v->x;
+	f32 y2 = v->y * v->y;
+	return sqrtf(x2 + y2);
 }
