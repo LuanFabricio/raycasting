@@ -384,18 +384,23 @@ void draw_player_view(const Vector2 pos, f32 angle)
 void update_player(scene_t *scene, f32 delta_time)
 {
 	vec2f32_t speed = { 0, 0 };
+	const vec2f32_t direction = vec2f32_from_angle(scene->player_angle + BASE_ROTATION);
 
 	if (IsKeyDown(KEY_W)) {
-		speed.y -= PLAYER_SPEED;
+		speed.x += PLAYER_SPEED * direction.x;
+		speed.y += PLAYER_SPEED * direction.y;
 	}
 	if (IsKeyDown(KEY_S)) {
-		speed.y += PLAYER_SPEED;
+		speed.x -= PLAYER_SPEED * direction.x;
+		speed.y -= PLAYER_SPEED * direction.y;
 	}
 	if (IsKeyDown(KEY_A)) {
-		speed.x -= PLAYER_SPEED;
+		speed.x -= PLAYER_SPEED * -direction.y;
+		speed.y -= PLAYER_SPEED * direction.x;
 	}
 	if (IsKeyDown(KEY_D)) {
-		speed.x += PLAYER_SPEED;
+		speed.x += PLAYER_SPEED * -direction.y;
+		speed.y += PLAYER_SPEED * direction.x;
 	}
 
 	const f32 max_x = scene->width * BLOCK_SIZE;
