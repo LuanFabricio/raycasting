@@ -8,7 +8,7 @@
 #include "src/utils.h"
 #include "src/vec2f32.h"
 
-#define BLOCK_SIZE 8
+#define BLOCK_SIZE 2
 
 #define SCALE 80
 
@@ -22,21 +22,21 @@
 
 #define BASE_ROTATION (-PI / 2)
 
-#define FAR_DISTANCE  25.0
-#define NEAR_DISTANCE 15.0
+#define FAR_DISTANCE  5.0
+#define NEAR_DISTANCE 1.0
 #define FOV (-PI / 2) // -90°
 
 #define EPSILON 1e-3
 
 // #define LOG
 
-void get_fov_plane(const vec2f32_t pos, const f32 angle, vec2f32_t out[2])
+void get_fov_plane(const vec2f32_t pos, const f32 angle, const f32 scale, vec2f32_t out[2])
 {
 	vec2f32_t plane_middle = vec2f32_from_angle(BASE_ROTATION + angle);
-	vec2f32_scale(&plane_middle, NEAR_DISTANCE, &plane_middle);
+	vec2f32_scale(&plane_middle, scale, &plane_middle);
 	vec2f32_add(&plane_middle , &CAST_TYPE(vec2f32_t, pos), &plane_middle);
 
-	f32 left = tan(FOV * 0.5) * NEAR_DISTANCE;
+	f32 left = tan(FOV * 0.5) * scale;
 
 	vec2f32_sub(&plane_middle, &CAST_TYPE(vec2f32_t, pos), &out[0]);
 	vec2f32_rot90(&out[0], &out[0]);
@@ -228,7 +228,7 @@ void render_scene(const scene_t *scene)
 	const u32 strip_width = 1 + GetScreenWidth() / screen_width;
 
 	vec2f32_t fov_plane[2] = {0};
-	get_fov_plane(scene->player_position, scene->player_angle, fov_plane);
+	get_fov_plane(scene->player_position, scene->player_angle, FAR_DISTANCE, fov_plane);
 
 	vec2f32_t player_ray = vec2f32_from_angle(scene->player_angle + BASE_ROTATION);
 	vec2f32_scale(&player_ray, 1/vec2f32_length(&player_ray), &player_ray);
@@ -259,8 +259,10 @@ void render_scene(const scene_t *scene)
 			const f32 strip_height = (f32)GetScreenHeight() / z;
 			const u32 y = (GetScreenHeight() - strip_height) / 2;
 			printf("[%u]Height strip: %.02f/%.02f\n", x, strip_height, z);
-			Color color = RED;
-			color.r /= z;
+			Color color = {.r = 0xff, .g = 0x10, .b = 0x10, .a = 0xff};
+			f32 shadow = MIN(1.0f/z*4.0f, 1.0f);
+			color.g *= shadow;
+			color.b *= shadow;
 			DrawRectangle(x*strip_width, y, strip_width, strip_height, color);
 		}
 	}
@@ -351,7 +353,7 @@ void draw_player_view(const Vector2 pos, f32 angle)
 	// 	DrawLineV(p1, p2, (i % 2) == 0 ? RED : BLUE);
 	// }
 
-	const u32 player_size = 3;
+	const u32 player_size = 1;
 	DrawCircleV(pos, player_size, GREEN);
 
 	// p2.x = cos(left_angle) * FAR_DISTANCE + p1.x;
@@ -363,11 +365,11 @@ void draw_player_view(const Vector2 pos, f32 angle)
 	// };
 
 	vec2f32_t plane_middle = vec2f32_from_angle(base_rotation + angle);
-	vec2f32_scale(&plane_middle, NEAR_DISTANCE, &plane_middle);
+	vec2f32_scale(&plane_middle, FAR_DISTANCE, &plane_middle);
 	vec2f32_add(&plane_middle , &CAST_TYPE(vec2f32_t, pos), &plane_middle);
 
 	vec2f32_t pov_plane[2] = {0};
-	get_fov_plane(CAST_TYPE(vec2f32_t, pos), angle, pov_plane);
+	get_fov_plane(CAST_TYPE(vec2f32_t, pos), angle, FAR_DISTANCE, pov_plane);
 
 	DrawLineV(CAST_TYPE(Vector2, plane_middle), CAST_TYPE(Vector2, pov_plane[0]), WHITE);
 	DrawLineV(pos, CAST_TYPE(Vector2, pov_plane[0]), WHITE);
