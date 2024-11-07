@@ -8,27 +8,7 @@
 #include "src/utils.h"
 #include "src/vec2f32.h"
 
-#define BLOCK_SIZE 8
-
-#define SCALE 80
-
-#define SCREEN_WITDH 16*SCALE
-#define SCREEN_HEIGHT 9*SCALE
-
-#define PLAYER_SPEED 10
-
-#define MIN(x, y) (x) > (y) ? (y) : (x)
-#define MAX(x, y) (x) < (y) ? (y) : (x)
-
-#define BASE_ROTATION (-PI / 2)
-
-#define FAR_DISTANCE  2.5
-#define NEAR_DISTANCE 1.0
-#define FOV (-PI / 2) // -90°
-
-#define EPSILON 1e-3
-
-// #define LOG
+#include "src/defines.h"
 
 void get_fov_plane(const vec2f32_t pos, const f32 angle, const f32 scale, vec2f32_t out[2])
 {
@@ -49,14 +29,6 @@ void get_fov_plane(const vec2f32_t pos, const f32 angle, const f32 scale, vec2f3
 	vec2f32_norm(&out[1], &out[1]);
 	vec2f32_scale(&out[1], left, &out[1]);
 	vec2f32_sub(&plane_middle, &out[1], &out[1]);
-}
-
-f32 point_distance(vec2f32_t p1, vec2f32_t p2)
-{
-	f32 dx = p1.x - p2.x;
-	f32 dy = p1.y - p2.y;
-
-	return sqrt(dx*dx + dy*dy);
 }
 
 bool get_intersection(vec2f32_t s1, vec2f32_t e1, vec2f32_t s2, vec2f32_t e2, vec2f32_t *out)
@@ -208,7 +180,7 @@ bool hit_block(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, vec
 			printf("\t(%.02f, %.02f) -> (%.02f, %.02f)\n", points[lines[j]].x, points[lines[j]].y, points[lines[j+1]].x, points[lines[j+1]].y);
 #endif // LOG
 			if (get_intersection(p1, p2, points[lines[j]], points[lines[j+1]], &current_hit)) {
-				f32 current_dist = point_distance(p1, current_hit);
+				f32 current_dist = vec2f32_distance(&p1, &current_hit);
 				if (current_dist < dist) {
 					dist = current_dist;
 					*hit = current_hit;
@@ -408,15 +380,15 @@ int main(void)
 	InitWindow(SCREEN_WITDH, SCREEN_HEIGHT, "RayCast");
 	const i32 color = 0xff00ffff;
 
-	block_e blocks[9*9] = {BLOCK_EMPTY};
+	block_e blocks[SCENE_WIDTH*SCENE_HEIGHT] = {BLOCK_EMPTY};
 	scene_t scene = {
-		.width = 9,
-		.height = 9,
+		.width = SCENE_WIDTH,
+		.height = SCENE_HEIGHT,
 		.blocks = blocks,
 		.player_angle = -PI / 4,
 	};
-	scene.player_position.x = scene.width;// * BLOCK_SIZE / 2.f;
-	scene.player_position.y = scene.height;// * BLOCK_SIZE / 2.f;
+	scene.player_position.x = scene.width / 2.0f;// * BLOCK_SIZE / 2.f;
+	scene.player_position.y = scene.height / 2.0f;// * BLOCK_SIZE / 2.f;
 
 	scene.blocks[0] = BLOCK_BRICKS;
 	scene.blocks[xy_to_index(3, 3, scene.width)] = BLOCK_BRICKS;
