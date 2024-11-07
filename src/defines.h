@@ -1,6 +1,7 @@
 #ifndef __SRC_DEFINES_H__
 #define __SRC_DEFINES_H__
 
+
 #define BLOCK_SIZE 8
 
 #define SCALE 80
@@ -10,8 +11,7 @@
 
 #define PLAYER_SPEED 10
 
-#define MIN(x, y) (x) > (y) ? (y) : (x)
-#define MAX(x, y) (x) < (y) ? (y) : (x)
+#define PI 3.14159265358979323846f
 
 #define BASE_ROTATION (-PI / 2)
 

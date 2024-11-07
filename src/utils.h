@@ -5,6 +5,9 @@
 #include <math.h>
 #include <float.h>
 
+#define MIN(x, y) (x) > (y) ? (y) : (x)
+#define MAX(x, y) (x) < (y) ? (y) : (x)
+
 #define CAST_TYPE(target, var) *(target*)&var
 
 #define DOUBLE_EQUAL(d1, d2) (fabs((d1) - (d2)) > DBL_EPSILON)
