@@ -63,3 +63,11 @@ f32 vec2f32_length(const vec2f32_t* v)
 	f32 y2 = v->y * v->y;
 	return sqrtf(x2 + y2);
 }
+
+f32 vec2f32_distance(const vec2f32_t *v1, const vec2f32_t *v2)
+{
+	f32 dx = v1->x - v2->x;
+	f32 dy = v1->y - v2->y;
+
+	return sqrt(dx*dx + dy*dy);
+}
