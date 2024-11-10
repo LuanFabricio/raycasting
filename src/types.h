@@ -6,6 +6,12 @@ typedef double f64;
 typedef unsigned int u32;
 typedef int i32;
 
+#ifndef __bool_true_false_are_defined
+#define bool bool
+#define false 0
+#define true 1
+#endif // bool
+
 typedef struct {
 	f32 x, y;
 } vec2f32_t;
