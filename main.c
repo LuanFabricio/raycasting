@@ -30,7 +30,8 @@ void render_scene(const scene_t *scene)
 		const f32 amount = (float)x / (float)screen_width;
 		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
 		vec2f32_t hit = {0};
-		const bool res = collision_hit_a_block(scene, scene->player_position, ray, &hit);
+		block_t *block = NULL;
+		const bool res = collision_hit_a_block(scene, scene->player_position, ray, &hit, &block);
 
 #ifdef LOG
 		printf("Lerp: \n");
@@ -52,7 +53,7 @@ void render_scene(const scene_t *scene)
 			const f32 strip_height = (f32)GetScreenHeight() / z;
 			const u32 y = (GetScreenHeight() - strip_height) / 2;
 			// printf("[%u]Height strip: %.02f/%.02f\n", x, strip_height, z);
-			Color color = {.r = 0xff, .g = 0x10, .b = 0x10, .a = 0xff};
+			Color color = CAST_TYPE(Color, block->color);
 			const f32 shadow = MIN(1.0f/z*4.0f, 1.0f);
 
 			color.r *= shadow;
@@ -116,14 +117,14 @@ void draw_step_function(const scene_t *scene)
 	}
 }
 
-void draw_grid(const block_e *blocks, u32 width, u32 height)
+void draw_grid(const block_t *blocks, u32 width, u32 height)
 {
 	for (u32 yy = 0; yy < height; yy++) {
 		for (u32 xx = 0; xx < width; xx++) {
 			const u32 index = xy_to_index(xx, yy, width);
 
-			if (blocks[index] == BLOCK_BRICKS) {
-				DrawRectangle(xx*BLOCK_SIZE, yy*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, RED);
+			if (blocks[index].block_type == BLOCK_BRICKS) {
+				DrawRectangle(xx*BLOCK_SIZE, yy*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, CAST_TYPE(Color, blocks[index].color));
 			}
 		}
 	}
@@ -201,7 +202,7 @@ int main(void)
 	InitWindow(SCREEN_WITDH, SCREEN_HEIGHT, "RayCast");
 	const i32 color = 0xff00ffff;
 
-	block_e blocks[SCENE_WIDTH*SCENE_HEIGHT] = {BLOCK_EMPTY};
+	block_t blocks[SCENE_WIDTH*SCENE_HEIGHT] = {0};
 	scene_t scene = {
 		.width = SCENE_WIDTH,
 		.height = SCENE_HEIGHT,
@@ -211,10 +212,23 @@ int main(void)
 	scene.player_position.x = scene.width / 2.0f;// * BLOCK_SIZE / 2.f;
 	scene.player_position.y = scene.height / 2.0f;// * BLOCK_SIZE / 2.f;
 
-	scene.blocks[0] = BLOCK_BRICKS;
-	scene.blocks[xy_to_index(3, 3, scene.width)] = BLOCK_BRICKS;
-	scene.blocks[xy_to_index(2, 3, scene.width)] = BLOCK_BRICKS;
-	scene.blocks[xy_to_index(3, 2, scene.width)] = BLOCK_BRICKS;
+	scene.blocks[0] = (block_t) {
+		.block_type = BLOCK_BRICKS,
+		.color = 0xffff0000
+		// BLOCK_BRICKS
+	};
+	scene.blocks[xy_to_index(3, 3, scene.width)] = (block_t) {
+		.block_type = BLOCK_BRICKS,
+		.color = 0xff0000ff
+	};
+	scene.blocks[xy_to_index(2, 3, scene.width)] = (block_t) {
+		.block_type = BLOCK_BRICKS,
+		.color = 0xff00ff00,
+	};
+	scene.blocks[xy_to_index(3, 2, scene.width)] = (block_t) {
+		.block_type = BLOCK_BRICKS,
+		.color = 0xffffffff,
+	};
 	// scene.blocks[2] = BLOCK_BRICKS;
 	// scene.blocks[4] = BLOCK_BRICKS;
 	// scene.blocks[6] = BLOCK_BRICKS;
