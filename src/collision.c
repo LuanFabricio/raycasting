@@ -93,10 +93,10 @@ bool collision_intersects(vec2f32_t s1, vec2f32_t e1, vec2f32_t s2, vec2f32_t e2
 	return true;
 }
 
-i32 collision_point_in_block(const block_e* blocks, const u32 blocks_len, const u32 width, vec2f32_t point)
+i32 collision_point_in_block(const block_t* blocks, const u32 blocks_len, const u32 width, vec2f32_t point)
 {
 	for (u32 i = 0; i < blocks_len; i++) {
-		block_e block = blocks[i];
+		block_type_e block = blocks[i].block_type;
 
 		if (block == BLOCK_BRICKS) {
 			vec2u32_t min_point = index_to_xy(i, width);
@@ -120,7 +120,7 @@ i32 collision_point_in_block(const block_e* blocks, const u32 blocks_len, const 
 	return -1;
 }
 
-bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, vec2f32_t *hit)
+bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, vec2f32_t *hit, block_t **block)
 {
 	vec2f32_t points[4] = {0};
 	const u32 blocks_len = scene->width * scene->height;
@@ -130,8 +130,9 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 
 	f32 dist = FLT_MAX;
 	vec2f32_t current_hit = {};
+	block_t *last_block = 0;
 	for (u32 i = 0; i < blocks_len; i++) {
-		if (scene->blocks[i] != BLOCK_BRICKS) continue;
+		if (scene->blocks[i].block_type != BLOCK_BRICKS) continue;
 		vec2u32_t block_pos = index_to_xy(i, scene->width);
 		scene_get_block_points(block_pos.x, block_pos.y, 1.0f, points);
 		for (u32 j = 0; j < sizeof(lines)/sizeof(u32); j+=2) {
@@ -145,6 +146,7 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 				if (current_dist < dist) {
 					dist = current_dist;
 					*hit = current_hit;
+					last_block = &scene->blocks[i];
 				}
 
 				have_hit = true;
@@ -152,5 +154,6 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 		}
 	}
 
+	*block = last_block;
 	return have_hit;
 }
