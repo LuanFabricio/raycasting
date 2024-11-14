@@ -181,26 +181,40 @@ void update_player(scene_t *scene, f32 delta_time)
 		speed.y += PLAYER_SPEED * direction.x;
 	}
 
-	const f32 max_x = scene->width; //* BLOCK_SIZE;
+	const f32 max_x = scene->width;
 	const f32 new_x = scene->player_position.x + speed.x * delta_time;
-	scene->player_position.x = MAX(MIN(new_x, max_x), 0);
 
-	const f32 max_y = scene->height; // * BLOCK_SIZE;
+	const f32 max_y = scene->height;
 	const f32 new_y = (scene->player_position.y + speed.y * delta_time);
-	scene->player_position.y = MAX(MIN(new_y, max_y), 0);
+
+	vec2f32_t new_position = {
+		.x = MAX(MIN(new_x, max_x), 0),
+		.y = scene->player_position.y,
+	};
+	bool hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, 0, 0);
+	if (!hit_a_block) {
+		scene->player_position.x = new_position.x;
+	}
+
+	new_position.x = scene->player_position.x;
+	new_position.y = MAX(MIN(new_y, max_y), 0);
+	hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, 0, 0);
+	if (!hit_a_block) {
+		scene->player_position.y = new_position.y;
+	}
 
 	if (IsKeyDown(KEY_LEFT)) {
 		scene->player_angle -= 0.75f * delta_time;
 	}
 
 	if (IsKeyDown(KEY_RIGHT)) {
-		scene->player_angle += 0.75f * delta_time; }
+		scene->player_angle += 0.75f * delta_time;
+	}
 }
 
 int main(void)
 {
 	InitWindow(SCREEN_WITDH, SCREEN_HEIGHT, "RayCast");
-	const i32 color = 0xff00ffff;
 
 	block_t blocks[SCENE_WIDTH*SCENE_HEIGHT] = {0};
 	scene_t scene = {
