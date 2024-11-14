@@ -145,7 +145,7 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 				f32 current_dist = vec2f32_distance(&p1, &current_hit);
 				if (current_dist < dist) {
 					dist = current_dist;
-					*hit = current_hit;
+					if (hit) *hit = current_hit;
 					last_block = &scene->blocks[i];
 				}
 
@@ -154,6 +154,6 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 		}
 	}
 
-	*block = last_block;
+	if (block) *block = last_block;
 	return have_hit;
 }
