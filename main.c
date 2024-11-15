@@ -216,6 +216,8 @@ int main(void)
 {
 	InitWindow(SCREEN_WITDH, SCREEN_HEIGHT, "RayCast");
 
+	Image brick_img = LoadImage("assets/textures/bricksx64.png");
+
 	block_t blocks[SCENE_WIDTH*SCENE_HEIGHT] = {0};
 	scene_t scene = {
 		.width = SCENE_WIDTH,
@@ -283,7 +285,7 @@ int main(void)
 					(Vector2) {0, 0},
 					0,
 					WHITE);
-			DrawRectangleLines(0, 0, minimap_size+4, minimap_size+4, GOLD);
+			DrawRectangleLines(0, 0, minimap_size+3, minimap_size+3, GOLD);
 		EndDrawing();
 
 		f32 delta_time = GetFrameTime();
