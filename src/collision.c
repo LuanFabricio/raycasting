@@ -98,7 +98,7 @@ i32 collision_point_in_block(const block_t* blocks, const u32 blocks_len, const 
 	for (u32 i = 0; i < blocks_len; i++) {
 		block_type_e block = blocks[i].block_type;
 
-		if (block == BLOCK_BRICKS) {
+		if (block != BLOCK_EMPTY) {
 			vec2u32_t min_point = index_to_xy(i, width);
 			min_point.x *= BLOCK_SIZE;
 			min_point.y *= BLOCK_SIZE;
@@ -132,7 +132,7 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 	vec2f32_t current_hit = {};
 	block_t *last_block = 0;
 	for (u32 i = 0; i < blocks_len; i++) {
-		if (scene->blocks[i].block_type != BLOCK_BRICKS) continue;
+		if (scene->blocks[i].block_type == BLOCK_EMPTY) continue;
 		vec2u32_t block_pos = index_to_xy(i, scene->width);
 		scene_get_block_points(block_pos.x, block_pos.y, 1.0f, points);
 		for (u32 j = 0; j < sizeof(lines)/sizeof(u32); j+=2) {
@@ -156,4 +156,9 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 
 	if (block) *block = last_block;
 	return have_hit;
+}
+
+bool collision_hit_ceil(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, vec2f32_t *hit, ceil_e *ceil)
+{
+	return false;
 }
