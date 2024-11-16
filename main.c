@@ -14,17 +14,19 @@
 #include "src/scene.h"
 #include "src/collision.h"
 
-
 void render_scene(const scene_t *scene)
 {
 	const u32 screen_width = 512;
 	const u32 strip_width = 1 + GetScreenWidth() / screen_width;
+	const u32 screen_height = 512;
+	const u32 strip_height = 1 + GetScreenHeight() / screen_height;
 
 	vec2f32_t fov_plane[2] = {0};
 	get_fov_plane(scene->player_position, scene->player_angle, FAR_DISTANCE, fov_plane);
 
 	vec2f32_t player_ray = vec2f32_from_angle(scene->player_angle + BASE_ROTATION);
 	vec2f32_scale(&player_ray, 1/vec2f32_length(&player_ray), &player_ray);
+
 	for (u32 x = 0; x < screen_width; x++) {
 		vec2f32_t ray = {0};
 		const f32 amount = (float)x / (float)screen_width;
@@ -44,22 +46,32 @@ void render_scene(const scene_t *scene)
 
 		if (res) {
 			vec2f32_t v = {0};
-			// printf("Hit: %.02f %.02f\n", hit.x, hit.y);
-			// printf("Player pos: %.02f %.02f\n", scene->player_position.x, scene->player_position.y);
 			vec2f32_sub(&hit, &scene->player_position, &v);
-			// printf("V: %.02f, %.02f\n", v.x, v.y);
-			// printf("Player ray: %.02f, %.02f\n", player_ray.x, player_ray.y);
 			const f32 z = vec2f32_dot(&v, &player_ray);
 			const f32 strip_height = (f32)GetScreenHeight() / z;
 			const u32 y = (GetScreenHeight() - strip_height) / 2;
-			// printf("[%u]Height strip: %.02f/%.02f\n", x, strip_height, z);
-			Color color = CAST_TYPE(Color, block->color);
-			const f32 shadow = MIN(1.0f/z*4.0f, 1.0f);
 
-			color.r *= shadow;
-			color.g *= shadow;
-			color.b *= shadow;
-			DrawRectangle(x*strip_width, y, strip_width, strip_height, color);
+			switch (block->block_type) {
+				case BLOCK_COLOR: {
+					Color color = CAST_TYPE(Color, *(u32*)block->data);
+					const f32 shadow = MIN(1.0f/z*4.0f, 1.0f);
+
+					color.r *= shadow;
+					color.g *= shadow;
+					color.b *= shadow;
+					DrawRectangle(x*strip_width, y, strip_width, strip_height, color);
+				} break;
+
+				case BLOCK_BRICKS: {
+					void *img = block->data;
+					for (u32 j = y; j < strip_height; j++) {
+
+					}
+				} break;
+
+				default:
+					break;
+			}
 		}
 	}
 }
@@ -123,8 +135,15 @@ void draw_grid(const block_t *blocks, u32 width, u32 height)
 		for (u32 xx = 0; xx < width; xx++) {
 			const u32 index = xy_to_index(xx, yy, width);
 
-			if (blocks[index].block_type == BLOCK_BRICKS) {
-				DrawRectangle(xx*BLOCK_SIZE, yy*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, CAST_TYPE(Color, blocks[index].color));
+			block_type_e block_type = blocks[index].block_type;
+			switch (block_type) {
+				case BLOCK_COLOR: {
+					u32 color = *(u32*)blocks[index].data;
+					DrawRectangle(xx*BLOCK_SIZE, yy*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, CAST_TYPE(Color, color));
+				} break;
+
+				default:
+					break;
 			}
 		}
 	}
@@ -219,41 +238,53 @@ int main(void)
 	Image brick_img = LoadImage("assets/textures/bricksx64.png");
 
 	block_t blocks[SCENE_WIDTH*SCENE_HEIGHT] = {0};
+	ceil_e ceil_grid[SCENE_WIDTH*SCENE_HEIGHT] = {0};
+
+	for (u32 i = 0; i < SCENE_WIDTH*SCENE_HEIGHT; i++) {
+		ceil_grid[i] = i % 2 == 0 ? CEIL_BLUE : CEIL_RED;
+	}
+
 	scene_t scene = {
 		.width = SCENE_WIDTH,
 		.height = SCENE_HEIGHT,
 		.blocks = blocks,
+		.ceil_grid = ceil_grid,
 		.player_angle = -PI / 4,
 	};
 	scene.player_position.x = scene.width / 2.0f;// * BLOCK_SIZE / 2.f;
 	scene.player_position.y = scene.height / 2.0f;// * BLOCK_SIZE / 2.f;
 
+	u32 colors[] = {
+		0xffff0000, // BLUE
+		0xff0000ff, // RED
+		0xff00ff00, // GREEN
+		0xffffffff, // WHITE
+	};
 	scene.blocks[0] = (block_t) {
-		.block_type = BLOCK_BRICKS,
-		.color = 0xffff0000
-		// BLOCK_BRICKS
+		.block_type = BLOCK_COLOR,
+		.data = &colors[0],
 	};
 	scene.blocks[xy_to_index(3, 3, scene.width)] = (block_t) {
-		.block_type = BLOCK_BRICKS,
-		.color = 0xff0000ff
+		.block_type = BLOCK_COLOR,
+		.data = &colors[1],
 	};
 	scene.blocks[xy_to_index(2, 3, scene.width)] = (block_t) {
-		.block_type = BLOCK_BRICKS,
-		.color = 0xff00ff00,
+		.block_type = BLOCK_COLOR,
+		.data = &colors[2],
 	};
 	scene.blocks[xy_to_index(3, 2, scene.width)] = (block_t) {
-		.block_type = BLOCK_BRICKS,
-		.color = 0xffffffff,
+		.block_type = BLOCK_COLOR,
+		.data = &colors[3],
 	};
-	// scene.blocks[2] = BLOCK_BRICKS;
-	// scene.blocks[4] = BLOCK_BRICKS;
-	// scene.blocks[6] = BLOCK_BRICKS;
-	// scene.blocks[8] = BLOCK_BRICKS;
-	// scene.blocks[10] = BLOCK_BRICKS;
-	// scene.blocks[12] = BLOCK_BRICKS;
-	// scene.blocks[14] = BLOCK_BRICKS;
-	// scene.blocks[16] = BLOCK_BRICKS;
-	// scene.blocks[18] = BLOCK_BRICKS;
+	// scene.blocks[2] = BLOCK_COLOR;
+	// scene.blocks[4] = BLOCK_COLOR;
+	// scene.blocks[6] = BLOCK_COLOR;
+	// scene.blocks[8] = BLOCK_COLOR;
+	// scene.blocks[10] = BLOCK_COLOR;
+	// scene.blocks[12] = BLOCK_COLOR;
+	// scene.blocks[14] = BLOCK_COLOR;
+	// scene.blocks[16] = BLOCK_COLOR;
+	// scene.blocks[18] = BLOCK_COLOR;
 
 	// for (u32 i = 0; i < scene.width * scene.height; i ++) {
 	// 	scene.blocks[i] = BLOCK_BRICKS;
