@@ -30,7 +30,7 @@ typedef struct {
 	u32 w, h;
 } box_t;
 
-typedef enum { BLOCK_EMPTY, BLOCK_BRICKS } block_type_e;
+typedef enum { BLOCK_EMPTY, BLOCK_COLOR, BLOCK_BRICKS } block_type_e;
 
 // TODO: Define how to handle multiple render types
 // Example:
@@ -53,12 +53,17 @@ typedef enum { BLOCK_EMPTY, BLOCK_BRICKS } block_type_e;
 //	}
 typedef struct {
 	block_type_e block_type;
-	u32 color;
+	// NOTE: Either a ptr to a color or a ptr to a texture.
+	// The default texture size is 64 x 64
+	void* data;
 } block_t;
+
+typedef enum { CEIL_NONE, CEIL_BLUE, CEIL_RED } ceil_e;
 
 typedef struct {
 	u32 width, height;
 	block_t *blocks;
+	ceil_e *ceil_grid;
 	vec2f32_t player_position;
 	f32 player_angle;
 } scene_t;
