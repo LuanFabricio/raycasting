@@ -5,6 +5,13 @@
 #include <math.h>
 #include <float.h>
 
+typedef enum {
+	COLOR_CHANNEL_ALPHA = 3,
+	COLOR_CHANNEL_RED = 2,
+	COLOR_CHANNEL_GREEN = 1,
+	COLOR_CHANNEL_BLUE = 0,
+} color_channel_e;
+
 #define MIN(x, y) (x) > (y) ? (y) : (x)
 #define MAX(x, y) (x) < (y) ? (y) : (x)
 
@@ -42,6 +49,11 @@ static vec2u32_t index_to_xy(u32 index, u32 width) {
 static f32 lerp(f32 start, f32 end, f32 amount)
 {
 	return start + amount * (end-start);
+}
+
+static u8 u32_to_color_channel(u32 color, color_channel_e channel)
+{
+	return ((0xff << (8 * channel)) & color) >> (8 * channel);
 }
 
 #endif // __SRC_UTILS_H__
