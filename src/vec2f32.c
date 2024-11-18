@@ -52,6 +52,18 @@ void vec2f32_lerp(const vec2f32_t *v1, const vec2f32_t *v2, f32 amount, vec2f32_
 	dest->y = lerp(v1->y, v2->y, amount);
 }
 
+void vec2f32_ceil(const vec2f32_t *v, vec2f32_t *dest)
+{
+	dest->x = ceilf(v->x);
+	dest->y = ceilf(v->y);
+}
+
+void vec2f32_floor(const vec2f32_t *v, vec2f32_t *dest)
+{
+	dest->x = floorf(v->x);
+	dest->y = floorf(v->y);
+}
+
 f32 vec2f32_dot(const vec2f32_t *v1, const vec2f32_t *v2)
 {
 	return v1->x * v2->x + v1->y * v2->y;
