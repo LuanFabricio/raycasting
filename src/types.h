@@ -3,6 +3,7 @@
 
 typedef float f32;
 typedef double f64;
+typedef unsigned char u8;
 typedef unsigned int u32;
 typedef int i32;
 
