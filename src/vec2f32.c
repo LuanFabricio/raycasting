@@ -83,3 +83,9 @@ f32 vec2f32_distance(const vec2f32_t *v1, const vec2f32_t *v2)
 
 	return sqrt(dx*dx + dy*dy);
 }
+
+void vec2f32_copy_signal(const vec2f32_t *v1, const vec2f32_t *v2, vec2f32_t* dest)
+{
+	dest->x = copysignf(v2->x, v1->x);
+	dest->y = copysignf(v2->y, v1->y);
+}

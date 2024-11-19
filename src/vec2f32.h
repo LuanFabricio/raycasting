@@ -15,5 +15,6 @@ void vec2f32_floor(const vec2f32_t *v, vec2f32_t *dest);
 f32 vec2f32_dot(const vec2f32_t *v1, const vec2f32_t *v2);
 f32 vec2f32_length(const vec2f32_t* v);
 f32 vec2f32_distance(const vec2f32_t *v1, const vec2f32_t *v2);
+void vec2f32_copy_signal(const vec2f32_t *v1, const vec2f32_t *v2, vec2f32_t* dest);
 
 #endif // _SRC_VEC2F32_H_
