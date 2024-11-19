@@ -120,7 +120,7 @@ i32 collision_point_in_block(const block_t* blocks, const u32 blocks_len, const 
 	return -1;
 }
 
-bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, vec2f32_t *hit, block_t **block)
+bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, vec2f32_t *hit, block_t **block, u8 *block_face)
 {
 	vec2f32_t points[4] = {0};
 	const u32 blocks_len = scene->width * scene->height;
@@ -130,6 +130,7 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 
 	f32 dist = FLT_MAX;
 	vec2f32_t current_hit = {};
+	u8 last_face = 0xff;
 	block_t *last_block = 0;
 	for (u32 i = 0; i < blocks_len; i++) {
 		if (scene->blocks[i].block_type == BLOCK_EMPTY) continue;
@@ -147,6 +148,7 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 					dist = current_dist;
 					if (hit) *hit = current_hit;
 					last_block = &scene->blocks[i];
+					last_face = j / 2;
 				}
 
 				have_hit = true;
@@ -155,6 +157,7 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 	}
 
 	if (block) *block = last_block;
+	if (block_face) *block_face = last_face;
 	return have_hit;
 }
 
