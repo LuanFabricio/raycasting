@@ -16,24 +16,26 @@
 
 void render_scene(const scene_t *scene)
 {
-	const u32 screen_width = 512;
-	const u32 strip_width = 1 + GetScreenWidth() / screen_width;
-	const u32 screen_height = 512;
-	const u32 strip_height = 1 + GetScreenHeight() / screen_height;
+	const u32 render_width = 512;
+	const u32 strip_width = 1 + GetScreenWidth() / render_width;
+	const u32 render_height = 512;
+	const u32 strip_height = 1 + GetScreenHeight() / render_height;
 
 	vec2f32_t fov_plane[2] = {0};
 	get_fov_plane(scene->player_position, scene->player_angle, FAR_DISTANCE, fov_plane);
 
-	vec2f32_t player_ray = vec2f32_from_angle(scene->player_angle + BASE_ROTATION);
+	vec2f32_t player_ray = vec2f32_from_angle(scene->player_angle);
 	vec2f32_scale(&player_ray, 1/vec2f32_length(&player_ray), &player_ray);
 
-	for (u32 x = 0; x < screen_width; x++) {
+	u32 screen_height = GetScreenHeight();
+	for (u32 x = 0; x < render_width; x++) {
 		vec2f32_t ray = {0};
-		const f32 amount = (float)x / (float)screen_width;
+		const f32 amount = (float)x / (float)render_width;
 		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
 		vec2f32_t hit = {0};
 		block_t *block = NULL;
-		const bool res = collision_hit_a_block(scene, scene->player_position, ray, &hit, &block);
+		u8 block_face = 0xff;
+		const bool res = collision_hit_a_block(scene, scene->player_position, ray, &hit, &block, &block_face);
 
 #ifdef LOG
 		printf("Lerp: \n");
@@ -47,14 +49,15 @@ void render_scene(const scene_t *scene)
 		if (res) {
 			vec2f32_t v = {0};
 			vec2f32_sub(&hit, &scene->player_position, &v);
-			const f32 z = vec2f32_dot(&v, &player_ray);
-			const f32 strip_height = (f32)GetScreenHeight() / z;
-			const u32 y = (GetScreenHeight() - strip_height) / 2;
+			const f32 perp_wall_dist = vec2f32_dot(&v, &player_ray);
+			const f32 strip_height = MIN((f32)screen_height / perp_wall_dist, screen_height);
+			const u32 y = (screen_height - strip_height) / 2;
+
+			const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
 
 			switch (block->block_type) {
 				case BLOCK_COLOR: {
 					Color color = CAST_TYPE(Color, *(u32*)block->data);
-					const f32 shadow = MIN(1.0f/z*4.0f, 1.0f);
 
 					color.r *= shadow;
 					color.g *= shadow;
@@ -63,9 +66,53 @@ void render_scene(const scene_t *scene)
 				} break;
 
 				case BLOCK_BRICKS: {
-					void *img = block->data;
-					for (u32 j = y; j < strip_height; j++) {
+					u32 *img = (u32*)block->data;
 
+					vec2f32_t grid_point = {0};
+					vec2f32_floor(&hit, &grid_point);
+
+					vec2f32_t tex_point = {0};
+					vec2f32_sub(&hit, &grid_point, &tex_point);
+
+					f32 u = 0;
+					switch (block_face) {
+						case 0:
+							u = 1 - tex_point.x;
+							break;
+						case 1:
+							u = 1 - tex_point.y;
+							break;
+						case 2:
+							u = tex_point.x;
+							break;
+						case 3:
+							u = tex_point.y;
+							break;
+						default:
+							break;
+					}
+
+					const u32 src_x = floorf(u * TEXTURE_SIZE);
+
+					const u32 y_start = MAX(0, y);
+					const u32 y_end = MIN(screen_height, (u32)(y + strip_height));
+
+					const f32 text_height_prop = TEXTURE_SIZE / strip_height;
+
+					for (u32 j = y_start; j < y_end; j++) {
+						const u32 src_y = floorf((j - y) * text_height_prop);
+						// BUG: Fish eye effect when the player is too close to the block.
+						const u32 src_point = src_y * TEXTURE_SIZE + src_x;
+
+						u32 color_u32 = (u32)img[src_point];
+						Color color = {
+							.r = u32_to_color_channel(color_u32, COLOR_CHANNEL_RED) * shadow,
+							.g = u32_to_color_channel(color_u32, COLOR_CHANNEL_GREEN) * shadow,
+							.b = u32_to_color_channel(color_u32, COLOR_CHANNEL_BLUE) * shadow,
+							.a = u32_to_color_channel(color_u32, COLOR_CHANNEL_ALPHA),
+						};
+
+						DrawRectangle(x*strip_width, j, strip_width, 1, color);
 					}
 				} break;
 
@@ -135,11 +182,24 @@ void draw_grid(const block_t *blocks, u32 width, u32 height)
 		for (u32 xx = 0; xx < width; xx++) {
 			const u32 index = xy_to_index(xx, yy, width);
 
-			block_type_e block_type = blocks[index].block_type;
+			block_t block = blocks[index];
+			block_type_e block_type = block.block_type;
 			switch (block_type) {
 				case BLOCK_COLOR: {
-					u32 color = *(u32*)blocks[index].data;
+					u32 color = *(u32*)block.data;
 					DrawRectangle(xx*BLOCK_SIZE, yy*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, CAST_TYPE(Color, color));
+				} break;
+
+				case BLOCK_BRICKS: {
+					// TODO: Render a texture instead of color
+					DrawRectangle(xx*BLOCK_SIZE, yy*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE, PURPLE);
+					// Image img = LoadImage("./assets/textures/bricksx64.png");
+					// ImageResize(&img, BLOCK_SIZE, BLOCK_SIZE);
+					// Texture2D tex = LoadTextureFromImage(img);
+					// UpdateTexture(tex, block.data);
+					// DrawTexture(tex, xx*BLOCK_SIZE, yy*BLOCK_SIZE, WHITE);
+					// UnloadTexture(tex);
+					// UnloadImage(img);
 				} break;
 
 				default:
@@ -157,19 +217,16 @@ void draw_player_view(Vector2 pos, f32 angle)
 
 	const f32 fov_length = FAR_DISTANCE*BLOCK_SIZE;
 
-	vec2f32_t plane_middle = vec2f32_from_angle(BASE_ROTATION + angle);
+	vec2f32_t plane_middle = vec2f32_from_angle(angle);
 	vec2f32_scale(&plane_middle, fov_length, &plane_middle);
 	vec2f32_add(&plane_middle , &CAST_TYPE(vec2f32_t, pos), &plane_middle);
 
 	vec2f32_t pov_plane[2] = {0};
 	get_fov_plane(CAST_TYPE(vec2f32_t, pos), angle, fov_length, pov_plane);
 
-	DrawLineV(CAST_TYPE(Vector2, plane_middle), CAST_TYPE(Vector2, pov_plane[0]), WHITE);
 	DrawLineV(pos, CAST_TYPE(Vector2, pov_plane[0]), WHITE);
-
-	DrawLineV(CAST_TYPE(Vector2, plane_middle), CAST_TYPE(Vector2, pov_plane[1]), WHITE);
 	DrawLineV(pos, CAST_TYPE(Vector2, pov_plane[1]), WHITE);
-
+	DrawLineV(CAST_TYPE(Vector2, pov_plane[0]), CAST_TYPE(Vector2, pov_plane[1]), WHITE);
 
 	// DrawCircleV(CAST_TYPE(Vector2, pov_plane[0]), 1, BLUE);
 	// DrawCircleV(CAST_TYPE(Vector2, plane_middle), 1, RED);
@@ -181,7 +238,7 @@ void draw_player_view(Vector2 pos, f32 angle)
 void update_player(scene_t *scene, f32 delta_time)
 {
 	vec2f32_t speed = { 0, 0 };
-	const vec2f32_t direction = vec2f32_from_angle(scene->player_angle + BASE_ROTATION);
+	const vec2f32_t direction = vec2f32_from_angle(scene->player_angle);
 
 	if (IsKeyDown(KEY_W)) {
 		speed.x += PLAYER_SPEED * direction.x;
@@ -210,14 +267,14 @@ void update_player(scene_t *scene, f32 delta_time)
 		.x = MAX(MIN(new_x, max_x), 0),
 		.y = scene->player_position.y,
 	};
-	bool hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, 0, 0);
+	bool hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, 0, 0, 0);
 	if (!hit_a_block) {
 		scene->player_position.x = new_position.x;
 	}
 
 	new_position.x = scene->player_position.x;
 	new_position.y = MAX(MIN(new_y, max_y), 0);
-	hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, 0, 0);
+	hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, 0, 0, 0);
 	if (!hit_a_block) {
 		scene->player_position.y = new_position.y;
 	}
@@ -229,6 +286,12 @@ void update_player(scene_t *scene, f32 delta_time)
 	if (IsKeyDown(KEY_RIGHT)) {
 		scene->player_angle += 0.75f * delta_time;
 	}
+
+	if (scene->player_angle < 0) {
+		scene->player_angle = 2 * PI - scene->player_angle;
+	} else if (scene->player_angle > 2 * PI) {
+		scene->player_angle = scene->player_angle - 2 * PI;
+	}
 }
 
 int main(void)
@@ -236,6 +299,7 @@ int main(void)
 	InitWindow(SCREEN_WITDH, SCREEN_HEIGHT, "RayCast");
 
 	Image brick_img = LoadImage("assets/textures/bricksx64.png");
+	Color *cs = LoadImageColors(brick_img);
 
 	block_t blocks[SCENE_WIDTH*SCENE_HEIGHT] = {0};
 	ceil_e ceil_grid[SCENE_WIDTH*SCENE_HEIGHT] = {0};
@@ -249,7 +313,7 @@ int main(void)
 		.height = SCENE_HEIGHT,
 		.blocks = blocks,
 		.ceil_grid = ceil_grid,
-		.player_angle = -PI / 4,
+		.player_angle = BASE_ROTATION,
 	};
 	scene.player_position.x = scene.width / 2.0f;// * BLOCK_SIZE / 2.f;
 	scene.player_position.y = scene.height / 2.0f;// * BLOCK_SIZE / 2.f;
@@ -259,6 +323,7 @@ int main(void)
 		0xff0000ff, // RED
 		0xff00ff00, // GREEN
 		0xffffffff, // WHITE
+		0xff999999, // Grey
 	};
 	scene.blocks[0] = (block_t) {
 		.block_type = BLOCK_COLOR,
@@ -276,6 +341,10 @@ int main(void)
 		.block_type = BLOCK_COLOR,
 		.data = &colors[3],
 	};
+	scene.blocks[xy_to_index(1, 2, scene.width)] = (block_t) {
+		.block_type = BLOCK_COLOR,
+		.data = &colors[4],
+	};
 	// scene.blocks[2] = BLOCK_COLOR;
 	// scene.blocks[4] = BLOCK_COLOR;
 	// scene.blocks[6] = BLOCK_COLOR;
@@ -289,6 +358,32 @@ int main(void)
 	// for (u32 i = 0; i < scene.width * scene.height; i ++) {
 	// 	scene.blocks[i] = BLOCK_BRICKS;
 	// }
+
+	u32 textures[3][TEXTURE_SIZE*TEXTURE_SIZE] = {0};
+	for (u32 x = 0; x < TEXTURE_SIZE; x++) {
+		for (u32 y = 0; y < TEXTURE_SIZE; y++) {
+			textures[0][TEXTURE_SIZE * y + x] = (0xff << (8 * 3)) | (0xfe * (x != y && x != TEXTURE_SIZE - y)) << (8 *  2); // RED with a black cross.
+			textures[1][TEXTURE_SIZE * y + x] = (0xff << (8 * 3)) | (0xc0 * (x % 16 && y % 16)) << (8 *  1); // RED bricks.
+
+			textures[2][TEXTURE_SIZE * y + x] = (cs[TEXTURE_SIZE * y + x].a << (8 * 3))
+						| ( cs[TEXTURE_SIZE * y + x].r << (8 * 2))
+						| ( cs[TEXTURE_SIZE * y + x].g << (8 * 1))
+						| ( cs[TEXTURE_SIZE * y + x].b << (8 * 0));
+		}
+	}
+
+	scene.blocks[xy_to_index(5, 2, scene.width)] = (block_t) {
+		.block_type = BLOCK_BRICKS,
+		.data = &textures[0],
+	};
+	scene.blocks[xy_to_index(7, 2, scene.width)] = (block_t) {
+		.block_type = BLOCK_BRICKS,
+		.data = &textures[1],
+	};
+	scene.blocks[xy_to_index(9, 2, scene.width)] = (block_t) {
+		.block_type = BLOCK_BRICKS,
+		.data = &textures[2],
+	};
 
 	RenderTexture2D minimap = LoadRenderTexture(scene.width * BLOCK_SIZE, scene.height * BLOCK_SIZE);
 
