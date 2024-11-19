@@ -15,11 +15,11 @@
 
 #define PI 3.14159265358979323846f
 
-#define BASE_ROTATION (-PI / 2)
+#define BASE_ROTATION (7 * PI / 2)
 
 #define FAR_DISTANCE  16.0
-#define NEAR_DISTANCE 1.0
-#define FOV (-PI / 2) // -90°
+#define NEAR_DISTANCE 5.0
+#define FOV (PI / 2) // -90°
 
 #define SCENE_WIDTH 16
 #define SCENE_HEIGHT 16
