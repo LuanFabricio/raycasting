@@ -16,6 +16,7 @@
 
 void render_scene(const scene_t *scene)
 {
+	// TODO: Check the coord types, maybe move from u32 to i32.
 	const u32 render_width = 512;
 	const u32 strip_width = 1 + GetScreenWidth() / render_width;
 	const u32 render_height = 512;
@@ -48,10 +49,11 @@ void render_scene(const scene_t *scene)
 
 		if (res) {
 			vec2f32_t v = {0};
+
 			vec2f32_sub(&hit, &scene->player_position, &v);
 			const f32 perp_wall_dist = vec2f32_dot(&v, &player_ray);
-			const f32 strip_height = MIN((f32)screen_height / perp_wall_dist, screen_height);
-			const u32 y = (screen_height - strip_height) / 2;
+			const f32 strip_height = (f32)screen_height / perp_wall_dist;
+			const i32 y = (screen_height - strip_height) * 0.5f;
 
 			const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
 
@@ -94,15 +96,15 @@ void render_scene(const scene_t *scene)
 
 					const u32 src_x = floorf(u * TEXTURE_SIZE);
 
-					const u32 y_start = MAX(0, y);
+					const i32 y_start = MAX(0, y);
 					const u32 y_end = MIN(screen_height, (u32)(y + strip_height));
 
 					const f32 text_height_prop = TEXTURE_SIZE / strip_height;
 
-					for (u32 j = y_start; j < y_end; j++) {
+					for (i32 j = y_start; j < y_end; j++) {
 						const u32 src_y = floorf((j - y) * text_height_prop);
-						// BUG: Fish eye effect when the player is too close to the block.
 						const u32 src_point = src_y * TEXTURE_SIZE + src_x;
+
 
 						u32 color_u32 = (u32)img[src_point];
 						Color color = {
