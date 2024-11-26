@@ -11,7 +11,7 @@
 
 #define TEXTURE_SIZE 64
 
-#define PLAYER_SPEED 10
+#define PLAYER_SPEED 5
 
 #define PI 3.14159265358979323846f
 
@@ -25,5 +25,8 @@
 #define SCENE_HEIGHT 16
 
 #define EPSILON 1e-3
+
+#define RENDER_WIDTH 512
+#define RENDER_HEIGHT 512
 
 #endif // __SRC_DEFINES_H__
