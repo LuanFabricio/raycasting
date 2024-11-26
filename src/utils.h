@@ -7,9 +7,9 @@
 
 typedef enum {
 	COLOR_CHANNEL_ALPHA = 3,
-	COLOR_CHANNEL_RED = 2,
+	COLOR_CHANNEL_BLUE = 2,
 	COLOR_CHANNEL_GREEN = 1,
-	COLOR_CHANNEL_BLUE = 0,
+	COLOR_CHANNEL_RED = 0,
 } color_channel_e;
 
 #define MIN(x, y) (x) > (y) ? (y) : (x)
@@ -34,7 +34,7 @@ static u32 blend_colors(const u32 src, const u32 target)
 
 static u32 xy_to_index(const u32 x, const u32 y, const u32 width)
 {
-	return width * y + x;
+		return width * y + x;
 }
 
 static vec2u32_t index_to_xy(u32 index, u32 width) {
@@ -55,5 +55,29 @@ static u8 u32_to_color_channel(u32 color, color_channel_e channel)
 {
 	return ((0xff << (8 * channel)) & color) >> (8 * channel);
 }
+
+static u32 color_channel_to_u32(u8 color, color_channel_e channel)
+{
+	return color << (8 * channel);
+}
+
+static u32 color_apply_shadow(u32 color_u32, f32 shadow)
+{
+	const u32 r = color_channel_to_u32(
+			u32_to_color_channel(color_u32, COLOR_CHANNEL_RED) * shadow,
+			COLOR_CHANNEL_RED);
+	const u32 g = color_channel_to_u32(
+			u32_to_color_channel(color_u32, COLOR_CHANNEL_GREEN) * shadow,
+			COLOR_CHANNEL_GREEN);
+	const u32 b = color_channel_to_u32(
+			u32_to_color_channel(color_u32, COLOR_CHANNEL_BLUE) * shadow,
+			COLOR_CHANNEL_BLUE);
+	const u32 a = color_channel_to_u32(
+			u32_to_color_channel(color_u32, COLOR_CHANNEL_ALPHA),
+			COLOR_CHANNEL_ALPHA);
+
+	return r | g | b | a;
+}
+
 
 #endif // __SRC_UTILS_H__
