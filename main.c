@@ -17,10 +17,8 @@
 void render_scene(const scene_t *scene)
 {
 	// TODO: Check the coord types, maybe move from u32 to i32.
-	const u32 render_width = 512;
-	const u32 strip_width = 1 + GetScreenWidth() / render_width;
-	const u32 render_height = 512;
-	const u32 strip_height = 1 + GetScreenHeight() / render_height;
+	const u32 strip_width = 1 + GetScreenWidth() / RENDER_WIDTH;
+	const u32 strip_height = 1 + GetScreenHeight() / RENDER_HEIGHT;
 
 	vec2f32_t fov_plane[2] = {0};
 	get_fov_plane(scene->player_position, scene->player_angle, FAR_DISTANCE, fov_plane);
@@ -29,10 +27,11 @@ void render_scene(const scene_t *scene)
 	vec2f32_scale(&player_ray, 1/vec2f32_length(&player_ray), &player_ray);
 
 	u32 screen_height = GetScreenHeight();
-	for (u32 x = 0; x < render_width; x++) {
+	for (u32 x = 0; x < RENDER_WIDTH; x++) {
 		vec2f32_t ray = {0};
-		const f32 amount = (float)x / (float)render_width;
+		const f32 amount = (float)x / (float)RENDER_WIDTH;
 		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
+
 		vec2f32_t hit = {0};
 		block_t *block = NULL;
 		u8 block_face = 0xff;
@@ -47,80 +46,48 @@ void render_scene(const scene_t *scene)
 		printf("[%u - Hit? %b] (%.02f, %.02f) -> (%.02f, %.02f)\n", x, res, ray.x, ray.y, hit.x, hit.y);
 #endif // LOG
 
-		if (res) {
-			vec2f32_t v = {0};
+		if (!res) continue;
 
-			vec2f32_sub(&hit, &scene->player_position, &v);
-			const f32 perp_wall_dist = vec2f32_dot(&v, &player_ray);
-			const f32 strip_height = (f32)screen_height / perp_wall_dist;
-			const i32 y = (screen_height - strip_height) * 0.5f;
+		vec2f32_t v = {0};
+		vec2f32_sub(&hit, &scene->player_position, &v);
+		const f32 perp_wall_dist = vec2f32_dot(&v, &player_ray);
+		const f32 strip_height = (f32)screen_height / perp_wall_dist;
+		const i32 y = (screen_height - strip_height) * 0.5f;
 
-			const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
+		const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
 
-			switch (block->block_type) {
-				case BLOCK_COLOR: {
-					Color color = CAST_TYPE(Color, *(u32*)block->data);
+		switch (block->block_type) {
+			case BLOCK_COLOR: {
+				u32 color_u32 = *(u32*)block->data;
+				color_u32 = color_apply_shadow(color_u32, shadow);
+				Color color = CAST_TYPE(Color, color_u32);
 
-					color.r *= shadow;
-					color.g *= shadow;
-					color.b *= shadow;
-					DrawRectangle(x*strip_width, y, strip_width, strip_height, color);
-				} break;
+				DrawRectangle(x*strip_width, y, strip_width, strip_height, color);
+			} break;
+			case BLOCK_BRICKS: {
+				u32 *img = (u32*)block->data;
 
-				case BLOCK_BRICKS: {
-					u32 *img = (u32*)block->data;
+				const u32 src_x = render_get_texture_x(&hit, block_face);
 
-					vec2f32_t grid_point = {0};
-					vec2f32_floor(&hit, &grid_point);
+				const i32 y_start = MAX(0, y);
+				const u32 y_end = MIN(screen_height, (u32)(y + strip_height));
 
-					vec2f32_t tex_point = {0};
-					vec2f32_sub(&hit, &grid_point, &tex_point);
+				const f32 text_height_prop = TEXTURE_SIZE / strip_height;
 
-					f32 u = 0;
-					switch (block_face) {
-						case 0:
-							u = 1 - tex_point.x;
-							break;
-						case 1:
-							u = 1 - tex_point.y;
-							break;
-						case 2:
-							u = tex_point.x;
-							break;
-						case 3:
-							u = tex_point.y;
-							break;
-						default:
-							break;
-					}
+				for (i32 j = y_start; j < y_end; j++) {
+					const u32 src_y = render_get_texture_y(j, y, text_height_prop);
+					const u32 src_point = render_get_texture_color_index(src_x, src_y, TEXTURE_SIZE);
 
-					const u32 src_x = floorf(u * TEXTURE_SIZE);
+					u32 color_u32 = (u32)img[src_point];
+					color_u32 = color_apply_shadow(color_u32, shadow);
+					Color color = CAST_TYPE(Color, color_u32);
 
-					const i32 y_start = MAX(0, y);
-					const u32 y_end = MIN(screen_height, (u32)(y + strip_height));
+					DrawRectangle(x*strip_width, j, strip_width, 1, color);
+				}
+			} break;
 
-					const f32 text_height_prop = TEXTURE_SIZE / strip_height;
-
-					for (i32 j = y_start; j < y_end; j++) {
-						const u32 src_y = floorf((j - y) * text_height_prop);
-						const u32 src_point = src_y * TEXTURE_SIZE + src_x;
-
-
-						u32 color_u32 = (u32)img[src_point];
-						Color color = {
-							.r = u32_to_color_channel(color_u32, COLOR_CHANNEL_RED) * shadow,
-							.g = u32_to_color_channel(color_u32, COLOR_CHANNEL_GREEN) * shadow,
-							.b = u32_to_color_channel(color_u32, COLOR_CHANNEL_BLUE) * shadow,
-							.a = u32_to_color_channel(color_u32, COLOR_CHANNEL_ALPHA),
-						};
-
-						DrawRectangle(x*strip_width, j, strip_width, 1, color);
-					}
-				} break;
-
-				default:
-					break;
-			}
+			default:
+				break;
 		}
 	}
 }
@@ -364,13 +331,14 @@ int main(void)
 	u32 textures[3][TEXTURE_SIZE*TEXTURE_SIZE] = {0};
 	for (u32 x = 0; x < TEXTURE_SIZE; x++) {
 		for (u32 y = 0; y < TEXTURE_SIZE; y++) {
-			textures[0][TEXTURE_SIZE * y + x] = (0xff << (8 * 3)) | (0xfe * (x != y && x != TEXTURE_SIZE - y)) << (8 *  2); // RED with a black cross.
-			textures[1][TEXTURE_SIZE * y + x] = (0xff << (8 * 3)) | (0xc0 * (x % 16 && y % 16)) << (8 *  1); // RED bricks.
+			const u32 tex_index = TEXTURE_SIZE * y + x;
+			textures[0][tex_index] = (0xff << (8 * 3)) | (0xfe * (x != y && x != TEXTURE_SIZE - y)) << (8 *  2); // RED with a black cross.
+			textures[1][tex_index] = (0xff << (8 * 3)) | (0xc0 * (x % 16 && y % 16)) << (8 *  1); // RED bricks.
 
-			textures[2][TEXTURE_SIZE * y + x] = (cs[TEXTURE_SIZE * y + x].a << (8 * 3))
-						| ( cs[TEXTURE_SIZE * y + x].r << (8 * 2))
-						| ( cs[TEXTURE_SIZE * y + x].g << (8 * 1))
-						| ( cs[TEXTURE_SIZE * y + x].b << (8 * 0));
+			textures[2][tex_index] = (cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
+						| (cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
+						| (cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
+						| (cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
 		}
 	}
 
