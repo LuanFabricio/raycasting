@@ -14,6 +14,30 @@
 #include "src/scene.h"
 #include "src/collision.h"
 
+void render_texture(
+		const render_texture_t *tex_data,
+		const u32 screen_x,
+		const u32 screen_height,
+		const f32 shadow
+)
+{
+	const f32 text_height_prop = tex_data->size.y / tex_data->strip.y;
+
+	const i32 y_start = MAX(0, tex_data->coords.y);
+	const i32 y_end = tex_data->coords.y + tex_data->strip.y;
+
+	for (i32 y = y_start; y < y_end; y++) {
+		const u32 tex_y = render_get_texture_y(y, tex_data->coords.y, text_height_prop);
+		const u32 tex_point = render_get_texture_color_index(
+				tex_data->coords.x, tex_y, tex_data->size.y);
+
+		const u32 color_u32 = color_apply_shadow(tex_data->pixels[tex_point], shadow);
+		Color color = CAST_TYPE(Color, color_u32);
+
+		DrawRectangle(screen_x, y, tex_data->strip.x, 1, color);
+	}
+}
+
 void render_scene(const scene_t *scene)
 {
 	// TODO: Check the coord types, maybe move from u32 to i32.
@@ -56,6 +80,7 @@ void render_scene(const scene_t *scene)
 
 		const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
 
+		// TODO: Move render.h
 		switch (block->block_type) {
 			case BLOCK_COLOR: {
 				u32 color_u32 = *(u32*)block->data;
@@ -65,25 +90,16 @@ void render_scene(const scene_t *scene)
 				DrawRectangle(x*strip_width, y, strip_width, strip_height, color);
 			} break;
 			case BLOCK_BRICKS: {
-				u32 *img = (u32*)block->data;
-
 				const u32 src_x = render_get_texture_x(&hit, block_face);
-
-				const i32 y_start = MAX(0, y);
-				const u32 y_end = MIN(screen_height, (u32)(y + strip_height));
-
-				const f32 text_height_prop = TEXTURE_SIZE / strip_height;
-
-				for (i32 j = y_start; j < y_end; j++) {
-					const u32 src_y = render_get_texture_y(j, y, text_height_prop);
-					const u32 src_point = render_get_texture_color_index(src_x, src_y, TEXTURE_SIZE);
-
-					u32 color_u32 = (u32)img[src_point];
-					color_u32 = color_apply_shadow(color_u32, shadow);
-					Color color = CAST_TYPE(Color, color_u32);
-
-					DrawRectangle(x*strip_width, j, strip_width, 1, color);
-				}
+				const render_texture_t tex_data = {
+					.pixels = block->data,
+					.coords = { src_x, y },
+					.strip = { strip_width, strip_height },
+					.size = { TEXTURE_SIZE, TEXTURE_SIZE },
+				};
+				render_texture(
+					&tex_data,
+					x*strip_width, screen_height, shadow);
 			} break;
 
 			default:
