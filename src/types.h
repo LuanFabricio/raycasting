@@ -22,6 +22,10 @@ typedef struct {
 } vec2u32_t;
 
 typedef struct {
+	i32 x, y;
+} vec2i32_t;
+
+typedef struct {
 	u32 width, height;
 	u32 *pixel_buffer;
 } image_t;
@@ -30,6 +34,13 @@ typedef struct {
 	f32 x, y;
 	u32 w, h;
 } box_t;
+
+typedef struct {
+	u32 *pixels;
+	vec2i32_t coords;
+	vec2f32_t strip;
+	vec2u32_t size;
+} render_texture_t;
 
 typedef enum { BLOCK_EMPTY, BLOCK_COLOR, BLOCK_BRICKS } block_type_e;
 
