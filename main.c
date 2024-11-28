@@ -41,6 +41,7 @@ void render_texture(
 void render_scene(const scene_t *scene)
 {
 	// TODO: Check the coord types, maybe move from u32 to i32.
+	// TODO: Draw in a texture instead of use draw calls
 	const u32 strip_width = 1 + GetScreenWidth() / RENDER_WIDTH;
 	const u32 strip_height = 1 + GetScreenHeight() / RENDER_HEIGHT;
 
@@ -252,16 +253,42 @@ void update_player(scene_t *scene, f32 delta_time)
 		.x = MAX(MIN(new_x, max_x), 0),
 		.y = scene->player_position.y,
 	};
-	bool hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, 0, 0, 0);
+	vec2f32_t hit = {0};
+	u8 block_face = 0xff;
+	bool hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &hit, 0, &block_face);
 	if (!hit_a_block) {
 		scene->player_position.x = new_position.x;
+	} else {
+		switch (block_face) {
+			case 1:
+				hit.x += 0.1;
+				break;
+			case 3:
+				hit.x -= 0.1;
+				break;
+			default:
+				break;
+		}
+		scene->player_position.x = hit.x;
 	}
 
 	new_position.x = scene->player_position.x;
 	new_position.y = MAX(MIN(new_y, max_y), 0);
-	hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, 0, 0, 0);
+	hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &hit, 0, &block_face);
 	if (!hit_a_block) {
 		scene->player_position.y = new_position.y;
+	} else {
+		switch (block_face) {
+			case 0:
+				hit.y -= 0.1;
+				break;
+			case 2:
+				hit.y += 0.1;
+				break;
+			default:
+				break;
+		}
+		scene->player_position.y = hit.y;
 	}
 
 	if (IsKeyDown(KEY_LEFT)) {
@@ -398,6 +425,7 @@ int main(void)
 					0,
 					WHITE);
 			DrawRectangleLines(0, 0, minimap_size+3, minimap_size+3, GOLD);
+			DrawFPS(GetScreenWidth() - 128, 16);
 		EndDrawing();
 
 		f32 delta_time = GetFrameTime();
