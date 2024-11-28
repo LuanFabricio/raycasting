@@ -148,7 +148,7 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 					dist = current_dist;
 					if (hit) *hit = current_hit;
 					last_block = &scene->blocks[i];
-					last_face = j / 2;
+					last_face = j >> 1;
 				}
 
 				have_hit = true;
