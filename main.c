@@ -24,7 +24,7 @@ void render_texture(
 	const f32 text_height_prop = tex_data->size.y / tex_data->strip.y;
 
 	const i32 y_start = MAX(0, tex_data->coords.y);
-	const i32 y_end = tex_data->coords.y + tex_data->strip.y;
+	const i32 y_end = MIN(screen_height, tex_data->coords.y + tex_data->strip.y);
 
 	for (i32 y = y_start; y < y_end; y++) {
 		const u32 tex_y = render_get_texture_y(y, tex_data->coords.y, text_height_prop);
