@@ -4,6 +4,7 @@
 #include <limits.h>
 #include "raylib.h"
 
+#include "src/image.h"
 #include "src/types.h"
 #include "src/utils.h"
 #include "src/vec2f32.h"
@@ -403,8 +404,17 @@ int main(void)
 	vec2f32_t speed = { 1.0f, 1.0f };
 	const u32 minimap_size = 320;
 
-	SetTargetFPS(60);
+	u32 pixel_buffer[SCREEN_WITDH*SCREEN_HEIGHT] = {0};
+	image_t game_image = image_create(SCREEN_WITDH, SCREEN_HEIGHT, pixel_buffer);
+	image_clear(&game_image, 0xff000000);
+	RenderTexture2D tex_game_image = LoadRenderTexture(SCREEN_WITDH, SCREEN_HEIGHT);
+
+	SetTargetFPS(75);
 	while(!WindowShouldClose()) {
+		image_clear(&game_image, 0xff000000);
+		render_scene_on_image(&scene, SCREEN_WITDH, SCREEN_HEIGHT, &game_image);
+		UpdateTexture(tex_game_image.texture, game_image.pixel_buffer);
+
 		BeginTextureMode(minimap);
 			ClearBackground(BLACK);
 			draw_grid(scene.blocks, scene.width, scene.height);
@@ -415,7 +425,13 @@ int main(void)
 		BeginDrawing();
 			ClearBackground(BLACK);
 
-			render_scene(&scene);
+			// render_scene(&scene);
+			// TODO: Test game scale on window
+			DrawTexturePro(tex_game_image.texture,
+					(Rectangle) {.x = 0, .y = 0, .width = game_image.width, .height = game_image.height },
+					(Rectangle) {.x = 0, .y = 0, .width = GetScreenWidth(), .height = GetScreenHeight()},
+					(Vector2) {0, 0},
+					0, WHITE);
 
 			DrawTexturePro(minimap.texture,
 					(Rectangle) {.x = 0, .y = 0, .width = minimap.texture.width, .height = -minimap.texture.height},
