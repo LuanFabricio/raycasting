@@ -160,7 +160,7 @@ void update_player(scene_t *scene, f32 delta_time)
 		.y = scene->player_position.y,
 	};
 	vec2f32_t hit = {0};
-	u8 block_face = 0xff;
+	block_face_e block_face = BLOCK_FACE_NONE;
 	bool hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &hit, 0, &block_face);
 	if (!hit_a_block) {
 		scene->player_position.x = new_position.x;
@@ -219,6 +219,28 @@ int main(void)
 	Image brick_img = LoadImage("assets/textures/bricksx64.png");
 	Color *cs = LoadImageColors(brick_img);
 
+	Image portal1_img = LoadImage("assets/textures/portal1.png");
+	Color *portal1_cs = LoadImageColors(portal1_img);
+	Image portal2_img = LoadImage("assets/textures/portal2.png");
+	Color *portal2_cs = LoadImageColors(portal2_img);
+	u32 portal1_pixels[TEXTURE_SIZE*TEXTURE_SIZE] = {0};
+	u32 portal2_pixels[TEXTURE_SIZE*TEXTURE_SIZE] = {0};
+	for (u32 x = 0; x < TEXTURE_SIZE; x++) {
+		for (u32 y = 0; y < TEXTURE_SIZE; y++) {
+			const u32 tex_index = TEXTURE_SIZE * y + x;
+			portal1_pixels[tex_index] = (portal1_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
+						 | (portal1_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
+						 | (portal1_cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
+						 | (portal1_cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
+			portal2_pixels[tex_index] = (portal2_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
+						 | (portal2_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
+						 | (portal2_cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
+						 | (portal2_cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
+		}
+	}
+	UnloadImage(portal1_img);
+	UnloadImage(portal2_img);
+
 	block_t blocks[SCENE_WIDTH*SCENE_HEIGHT] = {0};
 	ceil_e ceil_grid[SCENE_WIDTH*SCENE_HEIGHT] = {0};
 
@@ -232,6 +254,8 @@ int main(void)
 		.blocks = blocks,
 		.ceil_grid = ceil_grid,
 		.player_angle = BASE_ROTATION,
+		.portal1_pixels = portal1_pixels,
+		.portal2_pixels = portal2_pixels,
 	};
 	scene.player_position.x = scene.width / 2.0f;// * BLOCK_SIZE / 2.f;
 	scene.player_position.y = scene.height / 2.0f;// * BLOCK_SIZE / 2.f;
@@ -246,36 +270,33 @@ int main(void)
 	scene.blocks[0] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &colors[0],
+		.portal_face = BLOCK_FACE_NONE,
+		.portal = PORTAL_NONE,
 	};
 	scene.blocks[xy_to_index(3, 3, scene.width)] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &colors[1],
+		.portal_face = BLOCK_FACE_NONE,
+		.portal = PORTAL_NONE,
 	};
 	scene.blocks[xy_to_index(2, 3, scene.width)] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &colors[2],
+		.portal_face = BLOCK_FACE_NONE,
+		.portal = PORTAL_NONE,
 	};
 	scene.blocks[xy_to_index(3, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &colors[3],
+		.portal_face = BLOCK_FACE_NONE,
+		.portal = PORTAL_NONE,
 	};
 	scene.blocks[xy_to_index(1, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &colors[4],
+		.portal_face = BLOCK_FACE_NONE,
+		.portal = PORTAL_NONE,
 	};
-	// scene.blocks[2] = BLOCK_COLOR;
-	// scene.blocks[4] = BLOCK_COLOR;
-	// scene.blocks[6] = BLOCK_COLOR;
-	// scene.blocks[8] = BLOCK_COLOR;
-	// scene.blocks[10] = BLOCK_COLOR;
-	// scene.blocks[12] = BLOCK_COLOR;
-	// scene.blocks[14] = BLOCK_COLOR;
-	// scene.blocks[16] = BLOCK_COLOR;
-	// scene.blocks[18] = BLOCK_COLOR;
-
-	// for (u32 i = 0; i < scene.width * scene.height; i ++) {
-	// 	scene.blocks[i] = BLOCK_BRICKS;
-	// }
 
 	u32 textures[3][TEXTURE_SIZE*TEXTURE_SIZE] = {0};
 	for (u32 x = 0; x < TEXTURE_SIZE; x++) {
@@ -294,14 +315,20 @@ int main(void)
 	scene.blocks[xy_to_index(5, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
 		.data = &textures[0],
+		.portal_face = BLOCK_FACE_NONE,
+		.portal = PORTAL_NONE,
 	};
 	scene.blocks[xy_to_index(7, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
 		.data = &textures[1],
+		.portal_face = BLOCK_FACE_NONE,
+		.portal = PORTAL_NONE,
 	};
 	scene.blocks[xy_to_index(9, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
 		.data = &textures[2],
+		.portal_face = BLOCK_FACE_DOWN,
+		.portal = PORTAL_2,
 	};
 
 	RenderTexture2D minimap = LoadRenderTexture(scene.width * BLOCK_SIZE, scene.height * BLOCK_SIZE);
