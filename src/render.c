@@ -23,7 +23,7 @@ void get_fov_plane(const vec2f32_t pos, const f32 angle, const f32 scale, vec2f3
 	vec2f32_add(&pos, &out[1], &out[1]);
 }
 
-u32 render_get_texture_x(const vec2f32_t *hit_point, const u8 block_face)
+u32 render_get_texture_x(const vec2f32_t *hit_point, const block_face_e block_face)
 {
 	vec2f32_t grid_point = {0};
 	vec2f32_floor(hit_point, &grid_point);
@@ -117,7 +117,7 @@ void render_scene_on_image(
 
 		vec2f32_t hit = {0};
 		block_t *block = 0;
-		u8 block_face = 0xff;
+		block_face_e block_face = 0xff;
 		const bool res = collision_hit_a_block(
 				scene, scene->player_position, ray, &hit, &block, &block_face);
 
@@ -143,7 +143,7 @@ void render_scene_on_image(
 
 			case BLOCK_BRICKS: {
 				const u32 src_x = render_get_texture_x(&hit, block_face);
-				const render_texture_t tex_data = {
+				render_texture_t tex_data = {
 					.pixels = block->data,
 					.coords = { src_x, y },
 					.strip = { strip_width, strip_height },
@@ -153,6 +153,23 @@ void render_scene_on_image(
 					&tex_data,
 					x*strip_width, screen_height,
 					shadow, image);
+
+				if (block->portal_face == block_face && block->portal != PORTAL_NONE) {
+					switch (block->portal) {
+						case PORTAL_1:
+							tex_data.pixels = scene->portal1_pixels;
+							break;
+						case PORTAL_2:
+							tex_data.pixels = scene->portal2_pixels;
+							break;
+						default:
+							break;
+					}
+					render_block_texture_on_image(
+						&tex_data,
+						x*strip_width, screen_height,
+						shadow, image);
+				}
 			} break;
 
 			default:
