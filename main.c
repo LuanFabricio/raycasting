@@ -15,101 +15,6 @@
 #include "src/scene.h"
 #include "src/collision.h"
 
-void render_texture(
-		const render_texture_t *tex_data,
-		const u32 screen_x,
-		const u32 screen_height,
-		const f32 shadow
-)
-{
-	const f32 text_height_prop = tex_data->size.y / tex_data->strip.y;
-
-	const i32 y_start = MAX(0, tex_data->coords.y);
-	const i32 y_end = MIN(screen_height, tex_data->coords.y + tex_data->strip.y);
-
-	for (i32 y = y_start; y < y_end; y++) {
-		const u32 tex_y = render_get_texture_y(y, tex_data->coords.y, text_height_prop);
-		const u32 tex_point = render_get_texture_color_index(
-				tex_data->coords.x, tex_y, tex_data->size.y);
-
-		const u32 color_u32 = color_apply_shadow(tex_data->pixels[tex_point], shadow);
-		Color color = CAST_TYPE(Color, color_u32);
-
-		DrawRectangle(screen_x, y, tex_data->strip.x, 1, color);
-	}
-}
-
-void render_scene(const scene_t *scene)
-{
-	// TODO: Check the coord types, maybe move from u32 to i32.
-	// TODO: Draw in a texture instead of use draw calls
-	const u32 strip_width = 1 + GetScreenWidth() / RENDER_WIDTH;
-	const u32 strip_height = 1 + GetScreenHeight() / RENDER_HEIGHT;
-
-	vec2f32_t fov_plane[2] = {0};
-	get_fov_plane(scene->player_position, scene->player_angle, FAR_DISTANCE, fov_plane);
-
-	vec2f32_t player_ray = vec2f32_from_angle(scene->player_angle);
-	vec2f32_scale(&player_ray, 1/vec2f32_length(&player_ray), &player_ray);
-
-	u32 screen_height = GetScreenHeight();
-	for (u32 x = 0; x < RENDER_WIDTH; x++) {
-		vec2f32_t ray = {0};
-		const f32 amount = (float)x / (float)RENDER_WIDTH;
-		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
-
-		vec2f32_t hit = {0};
-		block_t *block = NULL;
-		u8 block_face = 0xff;
-		const bool res = collision_hit_a_block(scene, scene->player_position, ray, &hit, &block, &block_face);
-
-#ifdef LOG
-		printf("Lerp: \n");
-		printf("\tFov left: (%.02f, %.02f)\n", fov_plane[0].x, fov_plane[0].y);
-		printf("\tFov right: (%.02f, %.02f)\n", fov_plane[1].x, fov_plane[1].y);
-		printf("\tAmount: %.02f\n", amount);
-		printf("\tRay: (%.02f, %.02f)\n", ray.x, ray.y);
-		printf("[%u - Hit? %b] (%.02f, %.02f) -> (%.02f, %.02f)\n", x, res, ray.x, ray.y, hit.x, hit.y);
-#endif // LOG
-
-		if (!res) continue;
-
-		vec2f32_t v = {0};
-		vec2f32_sub(&hit, &scene->player_position, &v);
-		const f32 perp_wall_dist = vec2f32_dot(&v, &player_ray);
-		const f32 strip_height = (f32)screen_height / perp_wall_dist;
-		const i32 y = (screen_height - strip_height) * 0.5f;
-
-		const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
-
-		// TODO: Move render.h
-		switch (block->block_type) {
-			case BLOCK_COLOR: {
-				u32 color_u32 = *(u32*)block->data;
-				color_u32 = color_apply_shadow(color_u32, shadow);
-				Color color = CAST_TYPE(Color, color_u32);
-
-				DrawRectangle(x*strip_width, y, strip_width, strip_height, color);
-			} break;
-			case BLOCK_BRICKS: {
-				const u32 src_x = render_get_texture_x(&hit, block_face);
-				const render_texture_t tex_data = {
-					.pixels = block->data,
-					.coords = { src_x, y },
-					.strip = { strip_width, strip_height },
-					.size = { TEXTURE_SIZE, TEXTURE_SIZE },
-				};
-				render_texture(
-					&tex_data,
-					x*strip_width, screen_height, shadow);
-			} break;
-
-			default:
-				break;
-		}
-	}
-}
-
 void draw_step_function(const scene_t *scene)
 {
 	const f32 base_rotation = -PI / 2; // 90°
@@ -425,7 +330,6 @@ int main(void)
 		BeginDrawing();
 			ClearBackground(BLACK);
 
-			// render_scene(&scene);
 			// TODO: Test game scale on window
 			DrawTexturePro(tex_game_image.texture,
 					(Rectangle) {.x = 0, .y = 0, .width = game_image.width, .height = game_image.height },
