@@ -4,6 +4,7 @@
 #include "types.h"
 #include <math.h>
 #include <float.h>
+#include <stdio.h>
 
 typedef enum {
 	COLOR_CHANNEL_ALPHA = 3,
@@ -18,19 +19,6 @@ typedef enum {
 #define CAST_TYPE(target, var) *(target*)&var
 
 #define DOUBLE_EQUAL(d1, d2) (fabs((d1) - (d2)) > DBL_EPSILON)
-
-static u32 blend_colors(const u32 src, const u32 target)
-{
-	const f32 src_alpha = (f32)(src & 0xff) / 0xff;
-	const f32 src_alpha_c = 1.0f - src_alpha;
-
-	// TODO: Review this
-	const u32 final_color = (u32)((target & (0xff << 8 * 3)) * src_alpha_c + (src & (0xff << 8 * 3)) * src_alpha) // Red
-		| (u32)((target & (0xff << 8 * 2)) * src_alpha_c + (src & (0xff << 8 * 2)) * src_alpha) // Green
-		| (u32)((target & (0xff << 8 * 1)) * src_alpha_c + (src & (0xff << 8 * 1)) * src_alpha) // Blue
-		| 0xff; // Alpha
-	return final_color;
-}
 
 static u32 xy_to_index(const u32 x, const u32 y, const u32 width)
 {
@@ -76,6 +64,28 @@ static u32 color_apply_shadow(u32 color_u32, f32 shadow)
 			u32_to_color_channel(color_u32, COLOR_CHANNEL_ALPHA),
 			COLOR_CHANNEL_ALPHA);
 
+	return r | g | b | a;
+}
+
+static u32 blend_colors(const u32 src, const u32 dest)
+{
+	const f32 src_alpha = (f32)u32_to_color_channel(src, COLOR_CHANNEL_ALPHA) / 0xff;
+	const f32 dest_alpha = 1.0f - src_alpha;
+	// printf("Src alpha: %.08f(0x%08x|0x%08x)\n", src_alpha, src, u32_to_color_channel(src, COLOR_CHANNEL_ALPHA));
+
+	const u8 r_src = u32_to_color_channel(src, COLOR_CHANNEL_RED);
+	const u8 g_src = u32_to_color_channel(src, COLOR_CHANNEL_GREEN);
+	const u8 b_src = u32_to_color_channel(src, COLOR_CHANNEL_BLUE);
+
+	const u8 r_dest = u32_to_color_channel(dest, COLOR_CHANNEL_RED);
+	const u8 g_dest = u32_to_color_channel(dest, COLOR_CHANNEL_GREEN);
+	const u8 b_dest = u32_to_color_channel(dest, COLOR_CHANNEL_BLUE);
+
+	const u32 r = color_channel_to_u32(r_src * src_alpha + r_dest * dest_alpha, COLOR_CHANNEL_RED);
+	const u32 g = color_channel_to_u32(g_src * src_alpha + g_dest * dest_alpha, COLOR_CHANNEL_GREEN);
+	const u32 b = color_channel_to_u32(b_src * src_alpha + b_dest * dest_alpha, COLOR_CHANNEL_BLUE);
+
+	const u32 a = color_channel_to_u32(0xff, COLOR_CHANNEL_ALPHA);
 	return r | g | b | a;
 }
 
