@@ -120,7 +120,7 @@ i32 collision_point_in_block(const block_t* blocks, const u32 blocks_len, const 
 	return -1;
 }
 
-bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, vec2f32_t *hit, block_t **block, u8 *block_face)
+bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, vec2f32_t *hit, block_t **block, block_face_e *block_face)
 {
 	vec2f32_t points[4] = {0};
 	const u32 blocks_len = scene->width * scene->height;
