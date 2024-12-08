@@ -44,6 +44,17 @@ typedef struct {
 
 typedef enum { BLOCK_EMPTY, BLOCK_COLOR, BLOCK_BRICKS } block_type_e;
 
+typedef enum { CEIL_NONE, CEIL_BLUE, CEIL_RED } ceil_e;
+typedef enum {
+	BLOCK_FACE_UP	 = 0x00,
+	BLOCK_FACE_RIGHT = 0x01,
+	BLOCK_FACE_DOWN	 = 0x02,
+	BLOCK_FACE_LEFT	 = 0x03,
+	BLOCK_FACE_NONE	 = 0xff,
+} block_face_e;
+
+typedef enum { PORTAL_1, PORTAL_2, PORTAL_NONE } portal_e;
+
 // TODO: Define how to handle multiple render types
 // Example:
 // 	If a block have a sprite, use a ptr to that sprite.
@@ -68,9 +79,14 @@ typedef struct {
 	// NOTE: Either a ptr to a color or a ptr to a texture.
 	// The default texture size is 64 x 64
 	void* data;
+	block_face_e portal_face;
+	portal_e portal;
 } block_t;
 
-typedef enum { CEIL_NONE, CEIL_BLUE, CEIL_RED } ceil_e;
+typedef struct {
+	block_t* block_src;
+	block_face_e block_face;
+} portal_t;
 
 typedef struct {
 	u32 width, height;
@@ -78,6 +94,8 @@ typedef struct {
 	ceil_e *ceil_grid;
 	vec2f32_t player_position;
 	f32 player_angle;
+	u32* portal1_pixels;
+	u32* portal2_pixels;
 } scene_t;
 
 #endif // __SRC_TYPES_H__
