@@ -23,6 +23,8 @@ void image_set_pixel(image_t *img, u32 x, u32 y, u32 color)
 
 void image_draw_rectangle_color(image_t *img, u32 x, u32 y, u32 w, u32 h, u32 color)
 {
+	if (u32_to_color_channel(color, COLOR_CHANNEL_ALPHA) == 0x00) return;
+
 	u32 right = x+w;
 	u32 bottom = y+h;
 
@@ -31,8 +33,9 @@ void image_draw_rectangle_color(image_t *img, u32 x, u32 y, u32 w, u32 h, u32 co
 
 	for (u32 yy = y; yy <= bottom; yy++) {
 		for (u32 xx = x; xx <= right ; xx++) {
+			// TODO: Add back blend_colors after optimization
 			const u32 pixel_index = xy_to_index(xx, yy, img->width);
-			img->pixel_buffer[pixel_index] = blend_colors(color, img->pixel_buffer[pixel_index]);
+			img->pixel_buffer[pixel_index] = color;
 		}
 	}
 }

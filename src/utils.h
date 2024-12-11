@@ -67,6 +67,7 @@ static u32 color_apply_shadow(u32 color_u32, f32 shadow)
 	return r | g | b | a;
 }
 
+// TODO: Improve performance
 static u32 blend_colors(const u32 src, const u32 dest)
 {
 	const f32 src_alpha = (f32)u32_to_color_channel(src, COLOR_CHANNEL_ALPHA) / 0xff;
