@@ -31,8 +31,8 @@ void image_draw_rectangle_color(image_t *img, u32 x, u32 y, u32 w, u32 h, u32 co
 
 	for (u32 yy = y; yy <= bottom; yy++) {
 		for (u32 xx = x; xx <= right ; xx++) {
-			u32 new_color = blend_colors(color, img->pixel_buffer[xy_to_index(xx, yy, img->width)]);
-			img->pixel_buffer[xy_to_index(xx, yy, img->width)] = new_color;
+			const u32 pixel_index = xy_to_index(xx, yy, img->width);
+			img->pixel_buffer[pixel_index] = blend_colors(color, img->pixel_buffer[pixel_index]);
 		}
 	}
 }
