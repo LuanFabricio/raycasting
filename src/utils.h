@@ -1,10 +1,14 @@
 #ifndef __SRC_UTILS_H__
 #define __SRC_UTILS_H__
 
-#include "types.h"
+#include <emmintrin.h>
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
+#include <immintrin.h>
+#include <xmmintrin.h>
+
+#include "types.h"
 
 typedef enum {
 	COLOR_CHANNEL_ALPHA = 3,
@@ -67,28 +71,39 @@ static u32 color_apply_shadow(u32 color_u32, f32 shadow)
 	return r | g | b | a;
 }
 
-// TODO: Improve performance
 static u32 blend_colors(const u32 src, const u32 dest)
 {
-	const f32 src_alpha = (f32)u32_to_color_channel(src, COLOR_CHANNEL_ALPHA) / 0xff;
+	const u8 src_alpha_u8 = u32_to_color_channel(src, COLOR_CHANNEL_ALPHA);
+	if (src_alpha_u8 == 0xff) return src;
+
+	const f32 src_alpha = (f32)src_alpha_u8 / 0xff;
 	const f32 dest_alpha = 1.0f - src_alpha;
-	// printf("Src alpha: %.08f(0x%08x|0x%08x)\n", src_alpha, src, u32_to_color_channel(src, COLOR_CHANNEL_ALPHA));
 
 	const u8 r_src = u32_to_color_channel(src, COLOR_CHANNEL_RED);
 	const u8 g_src = u32_to_color_channel(src, COLOR_CHANNEL_GREEN);
 	const u8 b_src = u32_to_color_channel(src, COLOR_CHANNEL_BLUE);
 
+	__m128 vec_src_alpha = _mm_set_ps1(src_alpha);
+	__m128 vec_src_rgb = _mm_set_ps(r_src, g_src, b_src, 0);
+	vec_src_rgb = _mm_mul_ps(vec_src_alpha, vec_src_rgb);
+
 	const u8 r_dest = u32_to_color_channel(dest, COLOR_CHANNEL_RED);
 	const u8 g_dest = u32_to_color_channel(dest, COLOR_CHANNEL_GREEN);
 	const u8 b_dest = u32_to_color_channel(dest, COLOR_CHANNEL_BLUE);
 
-	const u32 r = color_channel_to_u32(r_src * src_alpha + r_dest * dest_alpha, COLOR_CHANNEL_RED);
-	const u32 g = color_channel_to_u32(g_src * src_alpha + g_dest * dest_alpha, COLOR_CHANNEL_GREEN);
-	const u32 b = color_channel_to_u32(b_src * src_alpha + b_dest * dest_alpha, COLOR_CHANNEL_BLUE);
+	__m128 vec_dest_alpha = _mm_set_ps1(dest_alpha);
+	__m128 vec_dest_rgb = _mm_set_ps(r_dest, g_dest, g_dest, 0);
+	vec_dest_rgb = _mm_mul_ps(vec_dest_alpha, vec_dest_rgb);
+
+	__m128 vec_blend_color = _mm_add_ps(vec_dest_rgb, vec_src_rgb);
+	f32 *blend_color = (f32*)&vec_blend_color;
+
+	const u32 r = color_channel_to_u32((u32)blend_color[3], COLOR_CHANNEL_RED);
+	const u32 g = color_channel_to_u32((u32)blend_color[2], COLOR_CHANNEL_GREEN);
+	const u32 b = color_channel_to_u32((u32)blend_color[1], COLOR_CHANNEL_BLUE);
 
 	const u32 a = color_channel_to_u32(0xff, COLOR_CHANNEL_ALPHA);
 	return r | g | b | a;
 }
-
 
 #endif // __SRC_UTILS_H__
