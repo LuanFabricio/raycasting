@@ -46,8 +46,8 @@ void scene_teleport_player(scene_t *scene, const block_t *block, const f32 delta
 		}
 
 		printf("Speed mul: %f, %f\n", speed_mul.x, speed_mul.y);
-		// TODO: Rotate player angle when teleports
-		scene->player_angle = angle;
+		// TODO: Check if its the best way
+		scene->player_angle += 2*angle;
 		scene->player_position.x += 1.2f * speed_mul.x + (1.0f - speed_mul.x) * 0.5;
 		scene->player_position.y += 1.2f * speed_mul.y + (1.0f - speed_mul.y) * 0.5;
 		printf("At %f, %f\n", scene->player_position.x, scene->player_position.y);
