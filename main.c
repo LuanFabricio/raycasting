@@ -149,11 +149,14 @@ void update_player(scene_t *scene, f32 delta_time)
 		speed.y += PLAYER_SPEED * direction.x;
 	}
 
+	speed.x *= delta_time;
+	speed.y *= delta_time;
+
 	const f32 max_x = scene->width;
-	const f32 new_x = scene->player_position.x + speed.x * delta_time;
+	const f32 new_x = scene->player_position.x + speed.x;
 
 	const f32 max_y = scene->height;
-	const f32 new_y = (scene->player_position.y + speed.y * delta_time);
+	const f32 new_y = scene->player_position.y + speed.y;
 
 	vec2f32_t new_position = {
 		.x = MAX(MIN(new_x, max_x), 0),
@@ -161,9 +164,14 @@ void update_player(scene_t *scene, f32 delta_time)
 	};
 	vec2f32_t hit = {0};
 	block_face_e block_face = BLOCK_FACE_NONE;
-	bool hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &hit, 0, &block_face);
+	block_t *block = 0;
+	bool hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &hit, &block, &block_face);
+
 	if (!hit_a_block) {
 		scene->player_position.x = new_position.x;
+	}
+	else if (block->portal_face != BLOCK_FACE_NONE && block->portal != PORTAL_NONE && block->portal_face == block_face) {
+		scene_teleport_player(scene, block, delta_time);
 	} else {
 		switch (block_face) {
 			case 1:
@@ -180,9 +188,12 @@ void update_player(scene_t *scene, f32 delta_time)
 
 	new_position.x = scene->player_position.x;
 	new_position.y = MAX(MIN(new_y, max_y), 0);
-	hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &hit, 0, &block_face);
+	hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &hit, &block, &block_face);
 	if (!hit_a_block) {
 		scene->player_position.y = new_position.y;
+	}
+	else if (block->portal_face != BLOCK_FACE_NONE && block->portal != PORTAL_NONE && block->portal_face == block_face) {
+		scene_teleport_player(scene, block, delta_time);
 	} else {
 		switch (block_face) {
 			case 0:
@@ -256,6 +267,8 @@ int main(void)
 		.player_angle = BASE_ROTATION,
 		.portal1_pixels = portal1_pixels,
 		.portal2_pixels = portal2_pixels,
+		.portal1 = {0},
+		.portal2 = {0},
 	};
 	scene.player_position.x = scene.width / 2.0f;// * BLOCK_SIZE / 2.f;
 	scene.player_position.y = scene.height / 2.0f;// * BLOCK_SIZE / 2.f;
@@ -315,8 +328,8 @@ int main(void)
 	scene.blocks[xy_to_index(5, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
 		.data = &textures[0],
-		.portal_face = BLOCK_FACE_NONE,
-		.portal = PORTAL_NONE,
+		.portal_face = BLOCK_FACE_DOWN,
+		.portal = PORTAL_1,
 	};
 	scene.blocks[xy_to_index(7, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
@@ -329,6 +342,16 @@ int main(void)
 		.data = &textures[2],
 		.portal_face = BLOCK_FACE_DOWN,
 		.portal = PORTAL_2,
+	};
+	scene.portal1 = (portal_t){
+		.position = (vec2u32_t) { .x = 5, .y = 2 },
+		.block_src = &scene.blocks[xy_to_index(5, 2, scene.width)],
+		.block_dest = &scene.blocks[xy_to_index(9, 2, scene.width)],
+	};
+	scene.portal2 = (portal_t){
+		.position = (vec2u32_t) { .x = 9, .y = 2 },
+		.block_src = &scene.blocks[xy_to_index(9, 2, scene.width)],
+		.block_dest = &scene.blocks[xy_to_index(5, 2, scene.width)],
 	};
 
 	RenderTexture2D minimap = LoadRenderTexture(scene.width * BLOCK_SIZE, scene.height * BLOCK_SIZE);
