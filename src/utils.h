@@ -9,6 +9,7 @@
 #include <xmmintrin.h>
 
 #include "types.h"
+#include "defines.h"
 
 typedef enum {
 	COLOR_CHANNEL_ALPHA = 3,
@@ -104,6 +105,20 @@ static u32 blend_colors(const u32 src, const u32 dest)
 
 	const u32 a = color_channel_to_u32(0xff, COLOR_CHANNEL_ALPHA);
 	return r | g | b | a;
+}
+
+static f32 update_speed_direction(portal_t *portal)
+{
+	const bool is_same_direction = portal->block_src->portal_face == portal->block_dest->portal_face;
+	if (is_same_direction) return PI / 2.0f; // 180°
+
+	const bool is_opposite_direction = (portal->block_src->portal_face == BLOCK_FACE_UP && portal->block_dest->portal_face == BLOCK_FACE_DOWN)
+		|| (portal->block_src->portal_face == BLOCK_FACE_DOWN && portal->block_dest->portal_face == BLOCK_FACE_UP)
+		|| (portal->block_src->portal_face == BLOCK_FACE_LEFT && portal->block_dest->portal_face == BLOCK_FACE_RIGHT)
+		|| (portal->block_src->portal_face == BLOCK_FACE_RIGHT && portal->block_dest->portal_face == BLOCK_FACE_LEFT);
+	if (is_opposite_direction) return 0; // 0°
+
+	return PI / 4.0f; // 90°
 }
 
 #endif // __SRC_UTILS_H__
