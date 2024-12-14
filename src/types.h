@@ -1,6 +1,8 @@
 #ifndef __SRC_TYPES_H__
 #define __SRC_TYPES_H__
 
+#include <stdbool.h>
+
 typedef float f32;
 typedef double f64;
 typedef unsigned char u8;
@@ -85,17 +87,20 @@ typedef struct {
 
 typedef struct {
 	block_t* block_src;
-	block_face_e block_face;
+	block_t* block_dest;
+	vec2u32_t position;
 } portal_t;
 
 typedef struct {
 	u32 width, height;
-	block_t *blocks;
-	ceil_e *ceil_grid;
+	block_t* blocks;
+	ceil_e* ceil_grid;
 	vec2f32_t player_position;
 	f32 player_angle;
 	u32* portal1_pixels;
 	u32* portal2_pixels;
+	portal_t portal1;
+	portal_t portal2;
 } scene_t;
 
 #endif // __SRC_TYPES_H__
