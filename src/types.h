@@ -57,6 +57,13 @@ typedef enum {
 
 typedef enum { PORTAL_1, PORTAL_2, PORTAL_NONE } portal_e;
 
+typedef enum {
+	COLOR_CHANNEL_ALPHA = 3,
+	COLOR_CHANNEL_BLUE = 2,
+	COLOR_CHANNEL_GREEN = 1,
+	COLOR_CHANNEL_RED = 0,
+} color_channel_e;
+
 // TODO: Define how to handle multiple render types
 // Example:
 // 	If a block have a sprite, use a ptr to that sprite.
