@@ -171,7 +171,7 @@ void update_player(scene_t *scene, f32 delta_time)
 		scene->player_position.x = new_position.x;
 	}
 	else if (block->portal_face != BLOCK_FACE_NONE && block->portal != PORTAL_NONE && block->portal_face == block_face) {
-		scene_teleport_player(scene, block, delta_time);
+		scene_teleport_player(scene, block);
 	} else {
 		switch (block_face) {
 			case 1:
@@ -193,7 +193,7 @@ void update_player(scene_t *scene, f32 delta_time)
 		scene->player_position.y = new_position.y;
 	}
 	else if (block->portal_face != BLOCK_FACE_NONE && block->portal != PORTAL_NONE && block->portal_face == block_face) {
-		scene_teleport_player(scene, block, delta_time);
+		scene_teleport_player(scene, block);
 	} else {
 		switch (block_face) {
 			case 0:

@@ -20,7 +20,7 @@ void scene_get_block_points(u32 x, u32 y, float scale, vec2f32_t *out)
 	out[3].y = (y+1) * scale;
 }
 
-void scene_teleport_player(scene_t *scene, const block_t *block, const f32 delta_time)
+void scene_teleport_player(scene_t *scene, const block_t *block)
 {
 		portal_t *portal = (block->portal == PORTAL_1) ? &scene->portal1 : &scene->portal2;
 		const f32 angle = update_speed_direction(portal);
