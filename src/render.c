@@ -13,7 +13,6 @@
 void get_fov_plane(const vec2f32_t pos, const f32 angle, const f32 scale, vec2f32_t out[2])
 {
 	const f32 half_fov = FOV * 0.5f;
-	f32 left = scale / cos(half_fov);
 	out[0] = vec2f32_from_angle(angle - half_fov);
 	vec2f32_scale(&out[0], scale, &out[0]);
 	vec2f32_add(&pos, &out[0], &out[0]);
@@ -102,7 +101,7 @@ void render_scene_on_image(
 )
 {
 	const u32 strip_width = 1 + screen_width / RENDER_WIDTH;
-	const u32 strip_height = 1 + screen_height / RENDER_HEIGHT;
+	// const u32 strip_height = 1 + screen_height / RENDER_HEIGHT;
 
 	vec2f32_t fov_plane[2] = {0};
 	get_fov_plane(scene->player_position, scene->player_angle, FAR_DISTANCE, fov_plane);
