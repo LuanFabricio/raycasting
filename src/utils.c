@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <stdio.h>
 
 u32 xy_to_index(const u32 x, const u32 y, const u32 width)
 {
@@ -51,6 +52,7 @@ u32 blend_colors(const u32 src, const u32 dest)
 {
 	const u8 src_alpha_u8 = u32_to_color_channel(src, COLOR_CHANNEL_ALPHA);
 	if (src_alpha_u8 == 0xff) return src;
+	if (src_alpha_u8 == 0x00) return dest;
 
 	const f32 src_alpha = (f32)src_alpha_u8 / 0xff;
 	const f32 dest_alpha = 1.0f - src_alpha;
