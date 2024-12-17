@@ -1,4 +1,5 @@
 #include "image.h"
+#include "types.h"
 #include "utils.h"
 
 image_t image_create(u32 width, u32 height, u32* pixel_buffer)
@@ -34,9 +35,18 @@ void image_draw_rectangle_color(image_t *img, u32 x, u32 y, u32 w, u32 h, u32 co
 	for (u32 yy = y; yy <= bottom; yy++) {
 		for (u32 xx = x; xx <= right ; xx++) {
 			const u32 pixel_index = xy_to_index(xx, yy, img->width);
-			img->pixel_buffer[pixel_index] = blend_colors(color, img->pixel_buffer[pixel_index]);
+			img->pixel_buffer[pixel_index] = color; // blend_colors(color, img->pixel_buffer[pixel_index]);
 		}
 	}
+}
+
+void image_draw_cross(image_t *image, u32 size, u32 thick, u32 color)
+{
+	const u32 half_size = size >> 1;
+	const u32 half_width = image->width / 2;
+	const u32 half_height = image->height / 2;
+	image_draw_rectangle_color(image, half_width - half_size, half_height, size + thick, thick, color);
+	image_draw_rectangle_color(image, half_width, half_height - half_size, thick, size + thick, color);
 }
 
 void image_append_image(image_t* target, const image_t* src, vec2u32_t position)
