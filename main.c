@@ -368,6 +368,7 @@ int main(void)
 	while(!WindowShouldClose()) {
 		image_clear(&game_image, 0xff000000);
 		render_scene_on_image(&scene, SCREEN_WITDH, SCREEN_HEIGHT, &game_image);
+		image_draw_cross(&game_image, 8, 2, 0xffffffff);
 		UpdateTexture(tex_game_image.texture, game_image.pixel_buffer);
 
 		BeginTextureMode(minimap);
