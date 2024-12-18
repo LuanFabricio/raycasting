@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "image.h"
 #include "types.h"
 #include "utils.h"
@@ -14,7 +16,8 @@ image_t image_create(u32 width, u32 height, u32* pixel_buffer)
 void image_clear(image_t *img, u32 color)
 {
 	const u32 img_len = img->width * img->height;
-	for (u32 i = 0; i < img_len; i++) img->pixel_buffer[i] = color;
+	memset(img->pixel_buffer, color, sizeof(u32)*img_len);
+	// for (u32 i = 0; i < img_len; i++) img->pixel_buffer[i] = color;
 }
 
 void image_set_pixel(image_t *img, u32 x, u32 y, u32 color)
