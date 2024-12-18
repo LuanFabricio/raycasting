@@ -56,14 +56,8 @@ void scene_place_teleport(scene_t *scene)
 	vec2f32_t fov[2] = {0};
 	get_fov_plane(scene->player_position, scene->player_angle, FAR_DISTANCE, fov);
 
-	// BUG: The middle ray does not set the player ray correctly
 	vec2f32_t ray = vec2f32_from_angle(scene->player_angle);
-	// vec2f32_scale(&ray, FAR_DISTANCE, &ray);
-	// vec2f32_add(&scene->player_position, &ray, &ray);
-	vec2f32_lerp(&fov[0], &fov[1], 0.498047, &ray);
-
-	printf("Pos: %f, %f\n", scene->player_position.x, scene->player_position.y);
-	printf("Ray: %f, %f\n", ray.x, ray.y);
+	vec2f32_lerp(&fov[0], &fov[1], 0.5f, &ray);
 
 	vec2f32_t hit = {0};
 	block_t *block = 0;
@@ -71,9 +65,6 @@ void scene_place_teleport(scene_t *scene)
 	collision_hit_a_block(scene, scene->player_position, ray, &hit, &block, &block_face);
 
 	if (block == 0 ) return;
-	printf("Hit: %f, %f\n", hit.x, hit.y);
-	printf("Block ptr: %p\n", block);
-	printf("Block face: %u\n", block_face);
 
 	block->portal = PORTAL_1;
 	block->portal_face = block_face;
