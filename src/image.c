@@ -47,8 +47,9 @@ void image_draw_rectangle_color(image_t *img, u32 x, u32 y, u32 w, u32 h, u32 co
 void image_draw_cross(image_t *image, u32 size, u32 thick, u32 color)
 {
 	const u32 half_size = size >> 1;
-	const u32 half_width = image->width / 2;
-	const u32 half_height = image->height / 2;
+	const u32 half_width = image->width >> 1;
+	const u32 half_height = image->height >> 1;
+
 	image_draw_rectangle_color(image, half_width - half_size, half_height, size + thick, thick, color);
 	image_draw_rectangle_color(image, half_width, half_height - half_size, thick, size + thick, color);
 }
