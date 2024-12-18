@@ -15,7 +15,7 @@
 
 #define PI 3.14159265358979323846f
 
-#define BASE_ROTATION (7 * PI / 2)
+#define BASE_ROTATION PI*3/2
 
 #define FAR_DISTANCE  16.0
 #define NEAR_DISTANCE 5.0
@@ -26,7 +26,7 @@
 
 #define EPSILON 1e-3
 
-#define RENDER_WIDTH 512
-#define RENDER_HEIGHT 512
+#define RENDER_WIDTH 640
+#define RENDER_HEIGHT 320
 
 #endif // __SRC_DEFINES_H__
