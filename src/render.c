@@ -12,6 +12,7 @@
 
 void get_fov_plane(const vec2f32_t pos, const f32 angle, const f32 scale, vec2f32_t out[2])
 {
+	// BUG: FoV not applied properly
 	const f32 half_fov = FOV * 0.5f;
 	out[0] = vec2f32_from_angle(angle - half_fov);
 	vec2f32_scale(&out[0], scale, &out[0]);
@@ -109,7 +110,7 @@ void render_scene_on_image(
 	vec2f32_t player_ray = vec2f32_from_angle(scene->player_angle);
 	vec2f32_scale(&player_ray, 1/vec2f32_length(&player_ray), &player_ray);
 
-	for (u32 x = 0; x < RENDER_WIDTH; x++) {
+	for (u32 x = 0; x <= RENDER_WIDTH; x++) {
 		vec2f32_t ray = {0};
 		const f32 amount = (f32)x / (float)RENDER_WIDTH;
 		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
