@@ -290,6 +290,12 @@ int main(void)
 		.portal_face = BLOCK_FACE_NONE,
 		.portal = PORTAL_NONE,
 	};
+	scene.blocks[xy_to_index(scene.width-1, 0, scene.width)] = (block_t) {
+		.block_type = BLOCK_COLOR,
+		.data = &colors[0],
+		.portal_face = BLOCK_FACE_NONE,
+		.portal = PORTAL_NONE,
+	};
 	scene.blocks[xy_to_index(3, 3, scene.width)] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &colors[1],
