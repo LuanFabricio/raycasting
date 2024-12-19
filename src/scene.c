@@ -59,13 +59,13 @@ void scene_place_teleport(scene_t *scene)
 	vec2f32_t ray = vec2f32_from_angle(scene->player_angle);
 	vec2f32_lerp(&fov[0], &fov[1], 0.5f, &ray);
 
-	vec2f32_t hit = {0};
-	block_t *block = 0;
-	block_face_e block_face = BLOCK_FACE_NONE;
-	collision_hit_a_block(scene, scene->player_position, ray, &hit, &block, &block_face);
+	collision_block_t collision_block = collision_block_empty();
+	bool have_collision = collision_hit_a_block(scene, scene->player_position, ray, &collision_block);
 
-	if (block == 0 ) return;
+	if (!have_collision) return;
 
-	block->portal = PORTAL_1;
-	block->portal_face = block_face;
+	collision_block.block_ptr->portal = PORTAL_1;
+	collision_block.block_ptr->portal_face = collision_block.face;
+
+	scene->portal2.block_dest = collision_block.block_ptr;
 }

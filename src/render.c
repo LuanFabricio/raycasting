@@ -115,25 +115,23 @@ void render_scene_on_image(
 		const f32 amount = (f32)x / (float)RENDER_WIDTH;
 		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
 
-		vec2f32_t hit = {0};
-		block_t *block = 0;
-		block_face_e block_face = 0xff;
+		collision_block_t collision_block = collision_block_empty();
 		const bool res = collision_hit_a_block(
-				scene, scene->player_position, ray, &hit, &block, &block_face);
+				scene, scene->player_position, ray, &collision_block);
 
 		if (!res) continue;
 
 		vec2f32_t v = {0};
-		vec2f32_sub(&hit, &scene->player_position, &v);
+		vec2f32_sub(&collision_block.hit, &scene->player_position, &v);
 		const f32 perp_wall_dist = vec2f32_dot(&v, &player_ray);
 		const f32 strip_height = (f32)screen_height / perp_wall_dist;
 		const f32 y = (screen_height - strip_height) * 0.5f;
 
 		const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
 
-		switch (block->block_type) {
+		switch (collision_block.block_ptr->block_type) {
 			case BLOCK_COLOR: {
-				const u32 color = *(u32*)block->data;
+				const u32 color = *(u32*)collision_block.block_ptr->data;
 				render_block_color_on_image(
 					x*strip_width, y,
 					strip_width, strip_height,
@@ -142,9 +140,9 @@ void render_scene_on_image(
 			} break;
 
 			case BLOCK_BRICKS: {
-				const u32 src_x = render_get_texture_x(&hit, block_face);
+				const u32 src_x = render_get_texture_x(&collision_block.hit, collision_block.face);
 				render_texture_t tex_data = {
-					.pixels = block->data,
+					.pixels = collision_block.block_ptr->data,
 					.coords = { src_x, y },
 					.strip = { strip_width, strip_height },
 					.size = { TEXTURE_SIZE, TEXTURE_SIZE },
@@ -154,8 +152,10 @@ void render_scene_on_image(
 					x*strip_width, screen_height,
 					shadow, image);
 
-				if (block->portal_face == block_face && block->portal != PORTAL_NONE) {
-					switch (block->portal) {
+				const bool is_valid_portal = !collision_block_is_portal_face_none(&collision_block);
+				const bool match_portal_face = collision_block_match_portal_face(&collision_block);
+				if (match_portal_face && is_valid_portal) {
+					switch (collision_block.block_ptr->portal) {
 						case PORTAL_1:
 							tex_data.pixels = scene->portal1_pixels;
 							break;

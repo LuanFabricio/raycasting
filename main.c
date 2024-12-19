@@ -129,6 +129,7 @@ void draw_player_view(Vector2 pos, f32 angle)
 
 void update_player(scene_t *scene, f32 delta_time)
 {
+
 	vec2f32_t speed = { 0, 0 };
 	const vec2f32_t direction = vec2f32_from_angle(scene->player_angle);
 
@@ -162,50 +163,55 @@ void update_player(scene_t *scene, f32 delta_time)
 		.x = MAX(MIN(new_x, max_x), 0),
 		.y = scene->player_position.y,
 	};
-	vec2f32_t hit = {0};
-	block_face_e block_face = BLOCK_FACE_NONE;
-	block_t *block = 0;
-	bool hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &hit, &block, &block_face);
+	collision_block_t collision_block = collision_block_empty();
+	bool hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &collision_block);
 
+	bool is_valid_face = !collision_block_is_portal_face_none(&collision_block);
+	bool is_valid_portal = !collision_block_is_portal_none(&collision_block);
+	bool match_portal_face = collision_block_match_portal_face(&collision_block);
 	if (!hit_a_block) {
 		scene->player_position.x = new_position.x;
 	}
-	else if (block->portal_face != BLOCK_FACE_NONE && block->portal != PORTAL_NONE && block->portal_face == block_face) {
-		scene_teleport_player(scene, block);
+	else if (is_valid_face && is_valid_portal && match_portal_face) {
+		scene_teleport_player(scene, collision_block.block_ptr);
 	} else {
-		switch (block_face) {
+		switch (collision_block.face) {
 			case 1:
-				hit.x += 0.1;
+				collision_block.hit.x += 0.1;
 				break;
 			case 3:
-				hit.x -= 0.1;
+				collision_block.hit.x -= 0.1;
 				break;
 			default:
 				break;
 		}
-		scene->player_position.x = hit.x;
+		scene->player_position.x = collision_block.hit.x;
 	}
 
 	new_position.x = scene->player_position.x;
 	new_position.y = MAX(MIN(new_y, max_y), 0);
-	hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &hit, &block, &block_face);
+	hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &collision_block);
+
+	is_valid_face = !collision_block_is_portal_face_none(&collision_block);
+	is_valid_portal = !collision_block_is_portal_none(&collision_block);
+	match_portal_face = collision_block_match_portal_face(&collision_block);
 	if (!hit_a_block) {
 		scene->player_position.y = new_position.y;
 	}
-	else if (block->portal_face != BLOCK_FACE_NONE && block->portal != PORTAL_NONE && block->portal_face == block_face) {
-		scene_teleport_player(scene, block);
+	else if (is_valid_face && is_valid_portal && match_portal_face) {
+		scene_teleport_player(scene, collision_block.block_ptr);
 	} else {
-		switch (block_face) {
+		switch (collision_block.face) {
 			case 0:
-				hit.y -= 0.1;
+				collision_block.hit.y -= 0.1;
 				break;
 			case 2:
-				hit.y += 0.1;
+				collision_block.hit.y += 0.1;
 				break;
 			default:
 				break;
 		}
-		scene->player_position.y = hit.y;
+		scene->player_position.y = collision_block.hit.y;
 	}
 
 	if (IsKeyDown(KEY_LEFT)) {
