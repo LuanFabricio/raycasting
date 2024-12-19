@@ -8,6 +8,31 @@
 #include "utils.h"
 #include "vec2f32.h"
 
+collision_block_t collision_block_empty()
+{
+	return (collision_block_t) {
+		.block_ptr = 0,
+		.face = BLOCK_FACE_NONE,
+		.hit = {0},
+		.position = {0},
+	};
+}
+
+bool collision_block_match_portal_face(const collision_block_t *collision_block)
+{
+	return collision_block->block_ptr && collision_block->face == collision_block->block_ptr->portal_face;
+}
+
+bool collision_block_is_portal_face_none(const collision_block_t *collision_block)
+{
+	return collision_block->block_ptr && collision_block->block_ptr->portal_face == BLOCK_FACE_NONE;
+}
+
+bool collision_block_is_portal_none(const collision_block_t *collision_block)
+{
+	return collision_block->block_ptr && collision_block->block_ptr->portal == PORTAL_NONE;
+}
+
 bool collision_intersects(vec2f32_t s1, vec2f32_t e1, vec2f32_t s2, vec2f32_t e2, vec2f32_t *out)
 {
 	f32 dx = e1.x - s1.x;
@@ -120,8 +145,9 @@ i32 collision_point_in_block(const block_t* blocks, const u32 blocks_len, const 
 	return -1;
 }
 
-bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, vec2f32_t *hit, block_t **block, block_face_e *block_face)
+bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, collision_block_t* collision_block)
 {
+
 	vec2f32_t points[4] = {0};
 	const u32 blocks_len = scene->width * scene->height;
 
@@ -130,8 +156,7 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 
 	f32 dist = FLT_MAX;
 	vec2f32_t current_hit = {};
-	u8 last_face = 0xff;
-	block_t *last_block = 0;
+
 	for (u32 i = 0; i < blocks_len; i++) {
 		if (scene->blocks[i].block_type == BLOCK_EMPTY) continue;
 		vec2u32_t block_pos = index_to_xy(i, scene->width);
@@ -146,9 +171,12 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 				f32 current_dist = vec2f32_distance(&p1, &current_hit);
 				if (current_dist < dist) {
 					dist = current_dist;
-					if (hit) *hit = current_hit;
-					last_block = &scene->blocks[i];
-					last_face = j >> 1;
+					if (collision_block != 0) {
+						collision_block->hit = current_hit;
+						collision_block->position = block_pos;
+						collision_block->block_ptr = &scene->blocks[i];
+						collision_block->face = j >> 1;
+					}
 				}
 
 				have_hit = true;
@@ -156,8 +184,6 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 		}
 	}
 
-	if (block) *block = last_block;
-	if (block_face) *block_face = last_face;
 	return have_hit;
 }
 
