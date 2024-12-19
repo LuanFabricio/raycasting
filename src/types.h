@@ -110,4 +110,11 @@ typedef struct {
 	portal_t portal2;
 } scene_t;
 
+typedef struct {
+	block_t *block_ptr;
+	block_face_e face;
+	vec2f32_t hit;
+	vec2u32_t position;
+} collision_block_t;
+
 #endif // __SRC_TYPES_H__
