@@ -27,8 +27,6 @@ void scene_teleport_player(scene_t *scene, const block_t *block)
 {
 		portal_t *portal = (block->portal == PORTAL_1) ? &scene->portal1 : &scene->portal2;
 		const f32 angle = update_speed_direction(portal);
-		vec2f32_t speed_mul = vec2f32_from_angle(angle);
-		vec2f32_norm(&speed_mul, &speed_mul);
 
 		switch (block->portal) {
 			case PORTAL_1: {
@@ -45,8 +43,9 @@ void scene_teleport_player(scene_t *scene, const block_t *block)
 
 		}
 
-		// TODO: Check if its the best way
 		scene->player_angle += 2*angle;
+		vec2f32_t speed_mul = vec2f32_from_angle(angle);
+		// BUG: The player position after left the portal isn't right
 		scene->player_position.x += 1.2f * speed_mul.x + (1.0f - speed_mul.x) * 0.5;
 		scene->player_position.y += 1.2f * speed_mul.y + (1.0f - speed_mul.y) * 0.5;
 }
