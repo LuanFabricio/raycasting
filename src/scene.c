@@ -63,8 +63,11 @@ void scene_place_teleport(scene_t *scene)
 
 	if (!have_collision) return;
 
+	// TODO: Handle portal 1 and portal 2
 	collision_block.block_ptr->portal = PORTAL_1;
 	collision_block.block_ptr->portal_face = collision_block.face;
 
 	scene->portal2.block_dest = collision_block.block_ptr;
+	scene->portal1.block_src = collision_block.block_ptr;
+	scene->portal1.position = collision_block.position;
 }
