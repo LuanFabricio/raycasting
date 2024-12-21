@@ -176,10 +176,10 @@ void update_player(scene_t *scene, f32 delta_time)
 		scene_teleport_player(scene, collision_block.block_ptr);
 	} else {
 		switch (collision_block.face) {
-			case 1:
+			case BLOCK_FACE_RIGHT:
 				collision_block.hit.x += 0.1;
 				break;
-			case 3:
+			case BLOCK_FACE_LEFT:
 				collision_block.hit.x -= 0.1;
 				break;
 			default:
@@ -202,10 +202,10 @@ void update_player(scene_t *scene, f32 delta_time)
 		scene_teleport_player(scene, collision_block.block_ptr);
 	} else {
 		switch (collision_block.face) {
-			case 0:
+			case BLOCK_FACE_UP:
 				collision_block.hit.y -= 0.1;
 				break;
-			case 2:
+			case BLOCK_FACE_DOWN:
 				collision_block.hit.y += 0.1;
 				break;
 			default:
