@@ -232,8 +232,11 @@ void update_player(scene_t *scene, f32 delta_time)
 		scene->player_angle = scene->player_angle - 2 * PI;
 	}
 
-	if (IsKeyPressed(KEY_SPACE)) {
-		scene_place_teleport(scene);
+	if (IsKeyPressed(KEY_UP)) {
+		scene_place_teleport(scene, PORTAL_1);
+	}
+	if (IsKeyPressed(KEY_DOWN)) {
+		scene_place_teleport(scene, PORTAL_2);
 	}
 }
 
