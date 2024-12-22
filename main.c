@@ -129,7 +129,7 @@ void draw_player_view(Vector2 pos, f32 angle)
 
 void update_player(scene_t *scene, f32 delta_time)
 {
-
+	// TODO: Refactor to a separated function on scene module
 	vec2f32_t speed = { 0, 0 };
 	const vec2f32_t direction = vec2f32_from_angle(scene->player_angle);
 
@@ -174,6 +174,8 @@ void update_player(scene_t *scene, f32 delta_time)
 	}
 	else if (is_valid_face && is_valid_portal && match_portal_face) {
 		scene_teleport_player(scene, collision_block.block_ptr);
+		// TODO: Fix this
+		return;
 	} else {
 		switch (collision_block.face) {
 			case BLOCK_FACE_RIGHT:
@@ -200,6 +202,8 @@ void update_player(scene_t *scene, f32 delta_time)
 	}
 	else if (is_valid_face && is_valid_portal && match_portal_face) {
 		scene_teleport_player(scene, collision_block.block_ptr);
+		// TODO: Fix this
+		return;
 	} else {
 		switch (collision_block.face) {
 			case BLOCK_FACE_UP:
