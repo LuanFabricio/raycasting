@@ -67,7 +67,7 @@ void scene_teleport_player(scene_t *scene, const block_t *block)
 		}
 }
 
-void scene_place_teleport(scene_t *scene)
+void scene_place_teleport(scene_t *scene, portal_e portal_type)
 {
 	vec2f32_t fov[2] = {0};
 	get_fov_plane(scene->player_position, scene->player_angle, FAR_DISTANCE, fov);
@@ -80,13 +80,39 @@ void scene_place_teleport(scene_t *scene)
 
 	if (!have_collision) return;
 
-	// TODO: Handle portal 1 and portal 2
-	collision_block.block_ptr->portal = PORTAL_1;
+	portal_t *portal_src = 0;
+	portal_t *portal_dest = 0;
+
+	// portal_e portal_type = PORTAL_1;
+	switch (portal_type) {
+		case PORTAL_1: {
+			portal_src = &scene->portal1;
+			portal_dest = &scene->portal2;
+		} break;
+
+		case PORTAL_2: {
+			portal_src = &scene->portal2;
+			portal_dest = &scene->portal1;
+		} break;
+
+		default:
+		       return;
+	}
+
+	if (portal_dest->block_dest) {
+		portal_dest->block_dest->portal_face = BLOCK_FACE_NONE;
+		portal_dest->block_dest->portal = PORTAL_NONE;
+	}
+	portal_dest->block_dest = collision_block.block_ptr;
+
+	if (portal_src->block_src) {
+		portal_src->block_src->portal_face = BLOCK_FACE_NONE;
+		portal_src->block_src->portal = PORTAL_NONE;
+	}
+	portal_src->block_src = collision_block.block_ptr;
+	portal_src->position = collision_block.position;
+	portal_src->block_dest = portal_dest->block_src;
+
+	collision_block.block_ptr->portal = portal_type;
 	collision_block.block_ptr->portal_face = collision_block.face;
-
-	scene->portal2.block_dest = collision_block.block_ptr;
-
-	scene->portal1.block_src = collision_block.block_ptr;
-	scene->portal1.position = collision_block.position;
-	scene->portal1.block_dest = scene->portal2.block_src;
 }
