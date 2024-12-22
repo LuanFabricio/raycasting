@@ -141,7 +141,7 @@ void render_scene_on_image(
 
 			case BLOCK_BRICKS: {
 				const u32 src_x = render_get_texture_x(&collision_block.hit, collision_block.face);
-				render_texture_t tex_data = {
+				const render_texture_t tex_data = {
 					.pixels = collision_block.block_ptr->data,
 					.coords = { src_x, y },
 					.strip = { strip_width, strip_height },
@@ -152,28 +152,35 @@ void render_scene_on_image(
 					x*strip_width, screen_height,
 					shadow, image);
 
-				const bool is_valid_portal = !collision_block_is_portal_face_none(&collision_block);
-				const bool match_portal_face = collision_block_match_portal_face(&collision_block);
-				if (match_portal_face && is_valid_portal) {
-					switch (collision_block.block_ptr->portal) {
-						case PORTAL_1:
-							tex_data.pixels = scene->portal1_pixels;
-							break;
-						case PORTAL_2:
-							tex_data.pixels = scene->portal2_pixels;
-							break;
-						default:
-							break;
-					}
-					render_block_texture_on_image(
-						&tex_data,
-						x*strip_width, screen_height,
-						shadow, image);
-				}
 			} break;
 
 			default:
+				continue;
 				break;
+		}
+
+		const bool match_portal_face = collision_block_match_portal_face(&collision_block);
+		const bool is_valid_portal = !collision_block_is_portal_face_none(&collision_block);
+		if (match_portal_face && is_valid_portal) {
+			render_texture_t tex_data = {
+				.coords = { render_get_texture_x(&collision_block.hit, collision_block.face), y },
+				.strip = { strip_width, strip_height },
+				.size = { TEXTURE_SIZE, TEXTURE_SIZE },
+			};
+			switch (collision_block.block_ptr->portal) {
+				case PORTAL_1:
+					tex_data.pixels = scene->portal1_pixels;
+					break;
+				case PORTAL_2:
+					tex_data.pixels = scene->portal2_pixels;
+					break;
+				default:
+					continue;
+			}
+			render_block_texture_on_image(
+				&tex_data,
+				x*strip_width, screen_height,
+				shadow, image);
 		}
 	}
 }
