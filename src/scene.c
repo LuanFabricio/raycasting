@@ -6,6 +6,7 @@
 
 #include "scene.h"
 #include "collision.h"
+#include <stdio.h>
 
 void scene_get_block_points(u32 x, u32 y, float scale, vec2f32_t *out)
 {
@@ -25,9 +26,7 @@ void scene_get_block_points(u32 x, u32 y, float scale, vec2f32_t *out)
 
 void scene_teleport_player(scene_t *scene, const block_t *block)
 {
-		portal_t *portal = (block->portal == PORTAL_1) ? &scene->portal1 : &scene->portal2;
-		const f32 angle = update_speed_direction(portal);
-
+		const portal_t *portal = (block->portal == PORTAL_1) ? &scene->portal1 : &scene->portal2;
 		switch (block->portal) {
 			case PORTAL_1: {
 				scene->player_position.x = scene->portal2.position.x;
@@ -42,12 +41,30 @@ void scene_teleport_player(scene_t *scene, const block_t *block)
 				break;
 
 		}
+		scene->player_position.x += 0.5f;
+		scene->player_position.y += 0.5f;
 
-		scene->player_angle += 2*angle;
-		vec2f32_t speed_mul = vec2f32_from_angle(angle);
-		// BUG: The player position after left the portal isn't right
-		scene->player_position.x += 1.2f * speed_mul.x + (1.0f - speed_mul.x) * 0.5;
-		scene->player_position.y += 1.2f * speed_mul.y + (1.0f - speed_mul.y) * 0.5;
+		const f32 angle = update_player_angle(portal);
+		scene->player_angle += angle;
+
+		// TODO: Use the momentum instead of this offset
+		const f32 offset = 0.75f;
+		switch (portal->block_dest->portal_face) {
+			case BLOCK_FACE_UP: {
+				scene->player_position.y -= offset;
+			} break;
+			case BLOCK_FACE_RIGHT: {
+				scene->player_position.x += offset;
+			} break;
+			case BLOCK_FACE_DOWN: {
+				scene->player_position.y += offset;
+			} break;
+			case BLOCK_FACE_LEFT: {
+				scene->player_position.x -= offset;
+			} break;
+			default:
+				break;
+		}
 }
 
 void scene_place_teleport(scene_t *scene)
@@ -68,6 +85,8 @@ void scene_place_teleport(scene_t *scene)
 	collision_block.block_ptr->portal_face = collision_block.face;
 
 	scene->portal2.block_dest = collision_block.block_ptr;
+
 	scene->portal1.block_src = collision_block.block_ptr;
 	scene->portal1.position = collision_block.position;
+	scene->portal1.block_dest = scene->portal2.block_src;
 }
