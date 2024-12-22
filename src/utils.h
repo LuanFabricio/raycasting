@@ -25,6 +25,6 @@ u8 u32_to_color_channel(u32 color, color_channel_e channel);
 u32 color_channel_to_u32(u8 color, color_channel_e channel);
 u32 color_apply_shadow(u32 color_u32, f32 shadow);
 u32 blend_colors(const u32 src, const u32 dest);
-f32 update_speed_direction(portal_t *portal);
+f32 update_player_angle(const portal_t *portal);
 
 #endif // __SRC_UTILS_H__
