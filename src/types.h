@@ -55,7 +55,12 @@ typedef enum {
 	BLOCK_FACE_NONE	 = 0xff,
 } block_face_e;
 
-typedef enum { PORTAL_1, PORTAL_2, PORTAL_NONE } portal_e;
+
+typedef enum {
+	PORTAL_NONE	= 0b0,
+	PORTAL_1 	= 0b1,
+	PORTAL_2 	= 0b10,
+} portal_e;
 
 typedef enum {
 	COLOR_CHANNEL_ALPHA = 3,
