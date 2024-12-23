@@ -1,5 +1,4 @@
 #include <math.h>
-#include <stdio.h>
 
 #include "collision.h"
 #include "types.h"
@@ -33,16 +32,16 @@ u32 render_get_texture_x(const vec2f32_t *hit_point, const block_face_e block_fa
 
 	f32 u = 0;
 	switch (block_face) {
-		case 0:
+		case BLOCK_FACE_UP:
 			u = 1 - tex_point.x;
 			break;
-		case 1:
+		case BLOCK_FACE_RIGHT:
 			u = 1 - tex_point.y;
 			break;
-		case 2:
+		case BLOCK_FACE_DOWN:
 			u = tex_point.x;
 			break;
-		case 3:
+		case BLOCK_FACE_LEFT:
 			u = tex_point.y;
 			break;
 		default:
