@@ -94,6 +94,33 @@ void render_block_texture_on_image(
 	}
 }
 
+void render_portal(
+	const scene_t *scene,
+	const collision_block_t collision_block,
+	const u32 x, const f32 y,
+	const u32 strip_width, const u32 strip_height,
+	const u32 screen_height,
+	const f32 shadow,
+	const portal_t *portal_ptr,
+	image_t *image
+)
+{
+	const bool block_face_match_portal = portal_ptr->block_src == collision_block.block_ptr
+		&& portal_ptr->face == collision_block.face;
+	if (block_face_match_portal) {
+		render_texture_t tex_data = {
+			.coords = { render_get_texture_x(&collision_block.hit, collision_block.face), y },
+			.strip = { strip_width, strip_height },
+			.size = { TEXTURE_SIZE, TEXTURE_SIZE },
+			.pixels = portal_ptr->pixels,
+		};
+		render_block_texture_on_image(
+			&tex_data,
+			x*strip_width, screen_height,
+			shadow, image);
+	}
+}
+
 void render_scene_on_image(
 	const scene_t *scene,
 	const u32 screen_width, const u32 screen_height,
@@ -158,28 +185,7 @@ void render_scene_on_image(
 				break;
 		}
 
-		const bool match_portal_face = collision_block_match_portal_face(&collision_block);
-		const bool is_valid_portal = !collision_block_is_portal_face_none(&collision_block);
-		if (match_portal_face && is_valid_portal) {
-			render_texture_t tex_data = {
-				.coords = { render_get_texture_x(&collision_block.hit, collision_block.face), y },
-				.strip = { strip_width, strip_height },
-				.size = { TEXTURE_SIZE, TEXTURE_SIZE },
-			};
-			switch (collision_block.block_ptr->portal) {
-				case PORTAL_1:
-					tex_data.pixels = scene->portal1_pixels;
-					break;
-				case PORTAL_2:
-					tex_data.pixels = scene->portal2_pixels;
-					break;
-				default:
-					continue;
-			}
-			render_block_texture_on_image(
-				&tex_data,
-				x*strip_width, screen_height,
-				shadow, image);
-		}
+		render_portal(scene, collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal1, image);
+		render_portal(scene, collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal2, image);
 	}
 }
