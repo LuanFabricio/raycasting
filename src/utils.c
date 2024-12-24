@@ -87,10 +87,10 @@ u32 blend_colors(const u32 src, const u32 dest)
 	return r | g | b | a;
 }
 
-f32 update_player_angle(const portal_t *portal)
+f32 update_player_angle(const portal_t *portal_src, const portal_t *portal_dest)
 {
-	const block_face_e v1_face = portal->block_src->portal_face;
-	const block_face_e v2_face = portal->block_dest->portal_face;
+	const block_face_e v1_face = portal_src->face;
+	const block_face_e v2_face = portal_dest->face;
 	const f32 match_table[BLOCK_FACE_LEFT+1][BLOCK_FACE_LEFT+1] = {
 		// UP 	    | RIGHT	| DOWN	    | LEFT	|
 		{ PI	    , 3 * PI / 2, 0	    , PI / 2	}, // BLOCK_FACE_UP
