@@ -166,14 +166,13 @@ void update_player(scene_t *scene, f32 delta_time)
 	collision_block_t collision_block = collision_block_empty();
 	bool hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &collision_block);
 
-	bool is_valid_face = !collision_block_is_portal_face_none(&collision_block);
-	bool is_valid_portal = !collision_block_is_portal_none(&collision_block);
-	bool match_portal_face = collision_block_match_portal_face(&collision_block);
+	bool is_a_portal_block = collision_block.block_ptr == scene->portal1.block_src
+		|| collision_block.block_ptr == scene->portal2.block_src;
 	if (!hit_a_block) {
 		scene->player_position.x = new_position.x;
 	}
-	else if (is_valid_face && is_valid_portal && match_portal_face) {
-		scene_teleport_player(scene, collision_block.block_ptr);
+	else if (is_a_portal_block) {
+		scene_teleport_player(scene, &collision_block);
 		// TODO: Fix this
 		return;
 	} else {
@@ -194,14 +193,13 @@ void update_player(scene_t *scene, f32 delta_time)
 	new_position.y = MAX(MIN(new_y, max_y), 0);
 	hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &collision_block);
 
-	is_valid_face = !collision_block_is_portal_face_none(&collision_block);
-	is_valid_portal = !collision_block_is_portal_none(&collision_block);
-	match_portal_face = collision_block_match_portal_face(&collision_block);
+	is_a_portal_block = collision_block.block_ptr == scene->portal1.block_src
+		|| collision_block.block_ptr == scene->portal2.block_src;
 	if (!hit_a_block) {
 		scene->player_position.y = new_position.y;
 	}
-	else if (is_valid_face && is_valid_portal && match_portal_face) {
-		scene_teleport_player(scene, collision_block.block_ptr);
+	else if (is_a_portal_block) {
+		scene_teleport_player(scene, &collision_block);
 		// TODO: Fix this
 		return;
 	} else {
@@ -282,13 +280,11 @@ int main(void)
 		.blocks = blocks,
 		.ceil_grid = ceil_grid,
 		.player_angle = BASE_ROTATION,
-		.portal1_pixels = portal1_pixels,
-		.portal2_pixels = portal2_pixels,
 		.portal1 = {0},
 		.portal2 = {0},
 	};
-	scene.player_position.x = scene.width / 2.0f;// * BLOCK_SIZE / 2.f;
-	scene.player_position.y = scene.height / 2.0f;// * BLOCK_SIZE / 2.f;
+	scene.player_position.x = scene.width / 2.0f;
+	scene.player_position.y = scene.height / 2.0f;
 
 	u32 colors[] = {
 		0xffff0000, // BLUE
@@ -300,38 +296,26 @@ int main(void)
 	scene.blocks[0] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &colors[0],
-		.portal_face = BLOCK_FACE_NONE,
-		.portal = PORTAL_NONE,
 	};
 	scene.blocks[xy_to_index(scene.width-1, 0, scene.width)] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &colors[0],
-		.portal_face = BLOCK_FACE_NONE,
-		.portal = PORTAL_NONE,
 	};
 	scene.blocks[xy_to_index(3, 3, scene.width)] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &colors[1],
-		.portal_face = BLOCK_FACE_NONE,
-		.portal = PORTAL_NONE,
 	};
 	scene.blocks[xy_to_index(2, 3, scene.width)] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &colors[2],
-		.portal_face = BLOCK_FACE_NONE,
-		.portal = PORTAL_NONE,
 	};
 	scene.blocks[xy_to_index(3, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &colors[3],
-		.portal_face = BLOCK_FACE_NONE,
-		.portal = PORTAL_NONE,
 	};
 	scene.blocks[xy_to_index(1, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &colors[4],
-		.portal_face = BLOCK_FACE_NONE,
-		.portal = PORTAL_NONE,
 	};
 
 	u32 textures[3][TEXTURE_SIZE*TEXTURE_SIZE] = {0};
@@ -351,30 +335,28 @@ int main(void)
 	scene.blocks[xy_to_index(5, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
 		.data = &textures[0],
-		.portal_face = BLOCK_FACE_DOWN,
-		.portal = PORTAL_1,
 	};
 	scene.blocks[xy_to_index(7, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
 		.data = &textures[1],
-		.portal_face = BLOCK_FACE_NONE,
-		.portal = PORTAL_NONE,
 	};
 	scene.blocks[xy_to_index(9, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
 		.data = &textures[2],
-		.portal_face = BLOCK_FACE_DOWN,
-		.portal = PORTAL_2,
 	};
 	scene.portal1 = (portal_t){
 		.position = (vec2u32_t) { .x = 5, .y = 2 },
 		.block_src = &scene.blocks[xy_to_index(5, 2, scene.width)],
 		.block_dest = &scene.blocks[xy_to_index(9, 2, scene.width)],
+		.face = BLOCK_FACE_DOWN,
+		.pixels = portal1_pixels,
 	};
 	scene.portal2 = (portal_t){
 		.position = (vec2u32_t) { .x = 9, .y = 2 },
 		.block_src = &scene.blocks[xy_to_index(9, 2, scene.width)],
 		.block_dest = &scene.blocks[xy_to_index(5, 2, scene.width)],
+		.face = BLOCK_FACE_DOWN,
+		.pixels = portal2_pixels,
 	};
 
 	RenderTexture2D minimap = LoadRenderTexture(scene.width * BLOCK_SIZE, scene.height * BLOCK_SIZE);
