@@ -93,14 +93,14 @@ typedef struct {
 	// NOTE: Either a ptr to a color or a ptr to a texture.
 	// The default texture size is 64 x 64
 	void* data;
-	block_face_e portal_face;
-	portal_e portal;
 } block_t;
 
 typedef struct {
 	block_t* block_src;
 	block_t* block_dest;
 	vec2u32_t position;
+	block_face_e face;
+	u32 *pixels;
 } portal_t;
 
 typedef struct {
@@ -109,8 +109,6 @@ typedef struct {
 	ceil_e* ceil_grid;
 	vec2f32_t player_position;
 	f32 player_angle;
-	u32* portal1_pixels;
-	u32* portal2_pixels;
 	portal_t portal1;
 	portal_t portal2;
 } scene_t;
