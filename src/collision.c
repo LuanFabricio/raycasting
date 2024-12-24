@@ -18,21 +18,6 @@ collision_block_t collision_block_empty()
 	};
 }
 
-bool collision_block_match_portal_face(const collision_block_t *collision_block)
-{
-	return collision_block->block_ptr && collision_block->face == collision_block->block_ptr->portal_face;
-}
-
-bool collision_block_is_portal_face_none(const collision_block_t *collision_block)
-{
-	return collision_block->block_ptr && collision_block->block_ptr->portal_face == BLOCK_FACE_NONE;
-}
-
-bool collision_block_is_portal_none(const collision_block_t *collision_block)
-{
-	return collision_block->block_ptr && collision_block->block_ptr->portal == PORTAL_NONE;
-}
-
 bool collision_intersects(vec2f32_t s1, vec2f32_t e1, vec2f32_t s2, vec2f32_t e2, vec2f32_t *out)
 {
 	f32 dx = e1.x - s1.x;
