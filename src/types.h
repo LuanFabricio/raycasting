@@ -104,11 +104,15 @@ typedef struct {
 } portal_t;
 
 typedef struct {
+	vec2f32_t position;
+	f32 angle;
+} entity_t;
+
+typedef struct {
 	u32 width, height;
 	block_t* blocks;
 	ceil_e* ceil_grid;
-	vec2f32_t player_position;
-	f32 player_angle;
+	entity_t player;
 	portal_t portal1;
 	portal_t portal2;
 } scene_t;
