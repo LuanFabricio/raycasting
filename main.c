@@ -18,14 +18,14 @@
 void draw_step_function(const scene_t *scene)
 {
 	const f32 base_rotation = -PI / 2; // 90°
-	const f32 final_angle = base_rotation + scene->player_angle;
+	const f32 final_angle = base_rotation + scene->player.angle;
 	const f32 x_rotation = cos(final_angle);
 	const f32 y_rotation = sin(final_angle);
 
 	const u32 steps = 5;
 	const f32 ray_step = FAR_DISTANCE / steps;
 
-	Vector2 p1 = *(Vector2*)&scene->player_position;
+	Vector2 p1 = *(Vector2*)&scene->player.position;
 	Vector2 p2 = {};
 
 	const u32 blocks_len = scene->width * scene->height;
@@ -131,7 +131,7 @@ void update_player(scene_t *scene, f32 delta_time)
 {
 	// TODO: Refactor to a separated function on scene module
 	vec2f32_t speed = { 0, 0 };
-	const vec2f32_t direction = vec2f32_from_angle(scene->player_angle);
+	const vec2f32_t direction = vec2f32_from_angle(scene->player.angle);
 
 	if (IsKeyDown(KEY_W)) {
 		speed.x += PLAYER_SPEED * direction.x;
@@ -154,22 +154,22 @@ void update_player(scene_t *scene, f32 delta_time)
 	speed.y *= delta_time;
 
 	const f32 max_x = scene->width;
-	const f32 new_x = scene->player_position.x + speed.x;
+	const f32 new_x = scene->player.position.x + speed.x;
 
 	const f32 max_y = scene->height;
-	const f32 new_y = scene->player_position.y + speed.y;
+	const f32 new_y = scene->player.position.y + speed.y;
 
 	vec2f32_t new_position = {
 		.x = MAX(MIN(new_x, max_x), 0),
-		.y = scene->player_position.y,
+		.y = scene->player.position.y,
 	};
 	collision_block_t collision_block = collision_block_empty();
-	bool hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &collision_block);
+	bool hit_a_block = collision_hit_a_block(scene, scene->player.position, new_position, &collision_block);
 
 	bool is_a_portal_block = collision_block.block_ptr == scene->portal1.block_src
 		|| collision_block.block_ptr == scene->portal2.block_src;
 	if (!hit_a_block) {
-		scene->player_position.x = new_position.x;
+		scene->player.position.x = new_position.x;
 	}
 	else if (is_a_portal_block) {
 		scene_teleport_player(scene, &collision_block);
@@ -186,17 +186,17 @@ void update_player(scene_t *scene, f32 delta_time)
 			default:
 				break;
 		}
-		scene->player_position.x = collision_block.hit.x;
+		scene->player.position.x = collision_block.hit.x;
 	}
 
-	new_position.x = scene->player_position.x;
+	new_position.x = scene->player.position.x;
 	new_position.y = MAX(MIN(new_y, max_y), 0);
-	hit_a_block = collision_hit_a_block(scene, scene->player_position, new_position, &collision_block);
+	hit_a_block = collision_hit_a_block(scene, scene->player.position, new_position, &collision_block);
 
 	is_a_portal_block = collision_block.block_ptr == scene->portal1.block_src
 		|| collision_block.block_ptr == scene->portal2.block_src;
 	if (!hit_a_block) {
-		scene->player_position.y = new_position.y;
+		scene->player.position.y = new_position.y;
 	}
 	else if (is_a_portal_block) {
 		scene_teleport_player(scene, &collision_block);
@@ -213,21 +213,21 @@ void update_player(scene_t *scene, f32 delta_time)
 			default:
 				break;
 		}
-		scene->player_position.y = collision_block.hit.y;
+		scene->player.position.y = collision_block.hit.y;
 	}
 
 	if (IsKeyDown(KEY_LEFT)) {
-		scene->player_angle -= 0.75f * delta_time;
+		scene->player.angle -= 0.75f * delta_time;
 	}
 
 	if (IsKeyDown(KEY_RIGHT)) {
-		scene->player_angle += 0.75f * delta_time;
+		scene->player.angle += 0.75f * delta_time;
 	}
 
-	if (scene->player_angle < 0) {
-		scene->player_angle = 2 * PI - scene->player_angle;
-	} else if (scene->player_angle > 2 * PI) {
-		scene->player_angle = scene->player_angle - 2 * PI;
+	if (scene->player.angle < 0) {
+		scene->player.angle = 2 * PI - scene->player.angle;
+	} else if (scene->player.angle > 2 * PI) {
+		scene->player.angle = scene->player.angle - 2 * PI;
 	}
 
 	if (IsKeyPressed(KEY_UP)) {
@@ -279,12 +279,15 @@ int main(void)
 		.height = SCENE_HEIGHT,
 		.blocks = blocks,
 		.ceil_grid = ceil_grid,
-		.player_angle = BASE_ROTATION,
+		.player = {
+			.position = {0},
+			.angle = BASE_ROTATION
+		},
 		.portal1 = {0},
 		.portal2 = {0},
 	};
-	scene.player_position.x = scene.width / 2.0f;
-	scene.player_position.y = scene.height / 2.0f;
+	scene.player.position.x = scene.width / 2.0f;
+	scene.player.position.y = scene.height / 2.0f;
 
 	u32 colors[] = {
 		0xffff0000, // BLUE
@@ -380,7 +383,7 @@ int main(void)
 			ClearBackground(BLACK);
 			draw_grid(scene.blocks, scene.width, scene.height);
 			//draw_step_function(&scene);
-			draw_player_view(*(Vector2*)&scene.player_position, scene.player_angle);
+			draw_player_view(*(Vector2*)&scene.player.position, scene.player.angle);
 		EndTextureMode();
 
 		BeginDrawing();

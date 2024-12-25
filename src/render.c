@@ -131,9 +131,9 @@ void render_scene_on_image(
 	// const u32 strip_height = 1 + screen_height / RENDER_HEIGHT;
 
 	vec2f32_t fov_plane[2] = {0};
-	get_fov_plane(scene->player_position, scene->player_angle, FAR_DISTANCE, fov_plane);
+	get_fov_plane(scene->player.position, scene->player.angle, FAR_DISTANCE, fov_plane);
 
-	vec2f32_t player_ray = vec2f32_from_angle(scene->player_angle);
+	vec2f32_t player_ray = vec2f32_from_angle(scene->player.angle);
 	vec2f32_norm(&player_ray, &player_ray);
 
 	for (u32 x = 0; x < RENDER_WIDTH; x++) {
@@ -143,12 +143,12 @@ void render_scene_on_image(
 
 		collision_block_t collision_block = collision_block_empty();
 		const bool res = collision_hit_a_block(
-				scene, scene->player_position, ray, &collision_block);
+				scene, scene->player.position, ray, &collision_block);
 
 		if (!res) continue;
 
 		vec2f32_t v = {0};
-		vec2f32_sub(&collision_block.hit, &scene->player_position, &v);
+		vec2f32_sub(&collision_block.hit, &scene->player.position, &v);
 		const f32 perp_wall_dist = vec2f32_dot(&v, &player_ray);
 		const f32 strip_height = (f32)screen_height / perp_wall_dist;
 		const f32 y = (screen_height - strip_height) * 0.5f;

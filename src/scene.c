@@ -29,15 +29,15 @@ void scene_teleport_player(scene_t *scene, const collision_block_t *collision_bl
 {
 	portal_t *portal_src = 0;
 	portal_t *portal_dest = 0;
+	entity_t *player_ptr = &scene->player;
 	if (collision_block->block_ptr == scene->portal1.block_src && collision_block->face == scene->portal1.face) {
-		scene->player_position.x = scene->portal2.position.x;
-		scene->player_position.y = scene->portal2.position.y;
+		player_ptr->position.x = scene->portal2.position.x;
+		player_ptr->position.y = scene->portal2.position.y;
 		portal_src = &scene->portal1;
 		portal_dest = &scene->portal2;
 	} else {
-
-		scene->player_position.x = scene->portal1.position.x;
-		scene->player_position.y = scene->portal1.position.y;
+		player_ptr->position.x = scene->portal1.position.x;
+		player_ptr->position.y = scene->portal1.position.y;
 		portal_src = &scene->portal2;
 		portal_dest = &scene->portal1;
 	}
@@ -45,28 +45,28 @@ void scene_teleport_player(scene_t *scene, const collision_block_t *collision_bl
 	assert(portal_src != 0 && "It should be a pointer to a portal.");
 	assert(portal_dest != 0 && "It should be a pointer to a portal.");
 
-	scene->player_position.x += 0.5f;
-	scene->player_position.y += 0.5f;
+	player_ptr->position.x += 0.5f;
+	player_ptr->position.y += 0.5f;
 
 	const f32 angle = update_player_angle(portal_src, portal_dest);
-	scene->player_angle += angle;
+	player_ptr->angle += angle;
 
 	// TODO: Use the momentum instead of this offset
 	const f32 offset = 0.75f;
 	block_face_e dest_face = portal_dest->face;
 	switch (dest_face) {
 		case BLOCK_FACE_UP: {
-					    scene->player_position.y -= offset;
-				    } break;
+			player_ptr->position.y -= offset;
+		} break;
 		case BLOCK_FACE_RIGHT: {
-					       scene->player_position.x += offset;
-				       } break;
+			player_ptr->position.x += offset;
+		} break;
 		case BLOCK_FACE_DOWN: {
-					      scene->player_position.y += offset;
-				      } break;
+			player_ptr->position.y += offset;
+		} break;
 		case BLOCK_FACE_LEFT: {
-					      scene->player_position.x -= offset;
-				      } break;
+			player_ptr->position.x -= offset;
+		} break;
 		default:
 				      break;
 	}
@@ -74,14 +74,15 @@ void scene_teleport_player(scene_t *scene, const collision_block_t *collision_bl
 
 void scene_place_teleport(scene_t *scene, portal_e portal_type)
 {
+	entity_t *player_ptr = &scene->player;
 	vec2f32_t fov[2] = {0};
-	get_fov_plane(scene->player_position, scene->player_angle, FAR_DISTANCE, fov);
+	get_fov_plane(player_ptr->position, player_ptr->angle, FAR_DISTANCE, fov);
 
-	vec2f32_t ray = vec2f32_from_angle(scene->player_angle);
+	vec2f32_t ray = vec2f32_from_angle(player_ptr->angle);
 	vec2f32_lerp(&fov[0], &fov[1], 0.5f, &ray);
 
 	collision_block_t collision_block = collision_block_empty();
-	bool have_collision = collision_hit_a_block(scene, scene->player_position, ray, &collision_block);
+	bool have_collision = collision_hit_a_block(scene, player_ptr->position, ray, &collision_block);
 
 	if (!have_collision) return;
 
