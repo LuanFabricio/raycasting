@@ -95,7 +95,6 @@ void render_block_texture_on_image(
 }
 
 void render_portal(
-	const scene_t *scene,
 	const collision_block_t collision_block,
 	const u32 x, const f32 y,
 	const u32 strip_width, const u32 strip_height,
@@ -185,7 +184,7 @@ void render_scene_on_image(
 				break;
 		}
 
-		render_portal(scene, collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal1, image);
-		render_portal(scene, collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal2, image);
+		render_portal(collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal1, image);
+		render_portal(collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal2, image);
 	}
 }
