@@ -36,27 +36,24 @@ void scene_teleport_player(scene_t *scene, const collision_block_t *collision_bl
 	portal_t *portal_src = 0;
 	portal_t *portal_dest = 0;
 
-	entity_t *player_ptr = &scene->player;
-
 	if (hit_portal1_block && hit_portal1_face) {
-		player_ptr->position.x = scene->portal2.position.x;
-		player_ptr->position.y = scene->portal2.position.y;
 		portal_src = &scene->portal1;
 		portal_dest = &scene->portal2;
 	} else if (hit_portal2_block && hit_portal2_face) {
-		player_ptr->position.x = scene->portal1.position.x;
-		player_ptr->position.y = scene->portal1.position.y;
 		portal_src = &scene->portal2;
 		portal_dest = &scene->portal1;
 	} else {
 		return;
 	}
 
+	if (portal_dest->block_src == 0 || portal_src->block_dest == 0) return;
+
 	assert(portal_src != 0 && "It should be a valid pointer to a portal.");
 	assert(portal_dest != 0 && "It should be a valid pointer to a portal.");
 
-	player_ptr->position.x += 0.5f;
-	player_ptr->position.y += 0.5f;
+	entity_t *player_ptr = &scene->player;
+	player_ptr->position.x = portal_dest->position.x + 0.5f;
+	player_ptr->position.y = portal_dest->position.y + 0.5f;
 
 	const f32 angle = update_player_angle(portal_src, portal_dest);
 	player_ptr->angle += angle;
