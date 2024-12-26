@@ -112,3 +112,82 @@ void scene_place_teleport(scene_t *scene, portal_e portal_type)
 	portal_src->block_dest = portal_dest->block_src;
 	portal_src->face = collision_block.face;
 }
+
+void scene_move_player(scene_t *scene, const vec2f32_t speed)
+{
+	const f32 max_x = scene->width;
+	const f32 new_x = scene->player.position.x + speed.x;
+
+	const f32 max_y = scene->height;
+	const f32 new_y = scene->player.position.y + speed.y;
+
+	vec2f32_t new_position = {
+		.x = MAX(MIN(new_x, max_x), 0),
+		.y = scene->player.position.y,
+	};
+	collision_block_t collision_block = collision_block_empty();
+	bool hit_a_block = collision_hit_a_block(scene, scene->player.position, new_position, &collision_block);
+
+	bool is_a_portal_block = collision_block.block_ptr == scene->portal1.block_src
+		|| collision_block.block_ptr == scene->portal2.block_src;
+	if (!hit_a_block) {
+		scene->player.position.x = new_position.x;
+	}
+	else if (is_a_portal_block) {
+		scene_teleport_player(scene, &collision_block);
+		// TODO: Fix this
+		return;
+	} else {
+		switch (collision_block.face) {
+			case BLOCK_FACE_RIGHT:
+				collision_block.hit.x += 0.1;
+				break;
+			case BLOCK_FACE_LEFT:
+				collision_block.hit.x -= 0.1;
+				break;
+			default:
+				break;
+		}
+		scene->player.position.x = collision_block.hit.x;
+	}
+
+	new_position.x = scene->player.position.x;
+	new_position.y = MAX(MIN(new_y, max_y), 0);
+	hit_a_block = collision_hit_a_block(scene, scene->player.position, new_position, &collision_block);
+
+	is_a_portal_block = collision_block.block_ptr == scene->portal1.block_src
+		|| collision_block.block_ptr == scene->portal2.block_src;
+	if (!hit_a_block) {
+		scene->player.position.y = new_position.y;
+	}
+	else if (is_a_portal_block) {
+		scene_teleport_player(scene, &collision_block);
+		// TODO: Fix this
+		return;
+	} else {
+		switch (collision_block.face) {
+			case BLOCK_FACE_UP:
+				collision_block.hit.y -= 0.1;
+				break;
+			case BLOCK_FACE_DOWN:
+				collision_block.hit.y += 0.1;
+				break;
+			default:
+				break;
+		}
+		scene->player.position.y = collision_block.hit.y;
+	}
+}
+
+void scene_rotate_player_camera(scene_t *scene, const f32 angle)
+{
+	f32 new_angle = scene->player.angle + angle;
+
+	if (new_angle < 0) {
+		new_angle = 2 * PI - scene->player.angle;
+	} else if (new_angle > 2 * PI) {
+		new_angle = scene->player.angle - 2 * PI;
+	}
+
+	scene->player.angle = new_angle;
+}

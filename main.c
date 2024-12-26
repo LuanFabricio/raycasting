@@ -129,10 +129,8 @@ void draw_player_view(Vector2 pos, f32 angle)
 
 void update_player(scene_t *scene, f32 delta_time)
 {
-	// TODO: Refactor to a separated function on scene module
 	vec2f32_t speed = { 0, 0 };
 	const vec2f32_t direction = vec2f32_from_angle(scene->player.angle);
-
 	if (IsKeyDown(KEY_W)) {
 		speed.x += PLAYER_SPEED * direction.x;
 		speed.y += PLAYER_SPEED * direction.y;
@@ -149,86 +147,19 @@ void update_player(scene_t *scene, f32 delta_time)
 		speed.x += PLAYER_SPEED * -direction.y;
 		speed.y += PLAYER_SPEED * direction.x;
 	}
-
 	speed.x *= delta_time;
 	speed.y *= delta_time;
+	scene_move_player(scene, speed);
 
-	const f32 max_x = scene->width;
-	const f32 new_x = scene->player.position.x + speed.x;
-
-	const f32 max_y = scene->height;
-	const f32 new_y = scene->player.position.y + speed.y;
-
-	vec2f32_t new_position = {
-		.x = MAX(MIN(new_x, max_x), 0),
-		.y = scene->player.position.y,
-	};
-	collision_block_t collision_block = collision_block_empty();
-	bool hit_a_block = collision_hit_a_block(scene, scene->player.position, new_position, &collision_block);
-
-	bool is_a_portal_block = collision_block.block_ptr == scene->portal1.block_src
-		|| collision_block.block_ptr == scene->portal2.block_src;
-	if (!hit_a_block) {
-		scene->player.position.x = new_position.x;
-	}
-	else if (is_a_portal_block) {
-		scene_teleport_player(scene, &collision_block);
-		// TODO: Fix this
-		return;
-	} else {
-		switch (collision_block.face) {
-			case BLOCK_FACE_RIGHT:
-				collision_block.hit.x += 0.1;
-				break;
-			case BLOCK_FACE_LEFT:
-				collision_block.hit.x -= 0.1;
-				break;
-			default:
-				break;
-		}
-		scene->player.position.x = collision_block.hit.x;
-	}
-
-	new_position.x = scene->player.position.x;
-	new_position.y = MAX(MIN(new_y, max_y), 0);
-	hit_a_block = collision_hit_a_block(scene, scene->player.position, new_position, &collision_block);
-
-	is_a_portal_block = collision_block.block_ptr == scene->portal1.block_src
-		|| collision_block.block_ptr == scene->portal2.block_src;
-	if (!hit_a_block) {
-		scene->player.position.y = new_position.y;
-	}
-	else if (is_a_portal_block) {
-		scene_teleport_player(scene, &collision_block);
-		// TODO: Fix this
-		return;
-	} else {
-		switch (collision_block.face) {
-			case BLOCK_FACE_UP:
-				collision_block.hit.y -= 0.1;
-				break;
-			case BLOCK_FACE_DOWN:
-				collision_block.hit.y += 0.1;
-				break;
-			default:
-				break;
-		}
-		scene->player.position.y = collision_block.hit.y;
-	}
-
+	f32 angle = 0;
 	if (IsKeyDown(KEY_LEFT)) {
-		scene->player.angle -= 0.75f * delta_time;
+		angle -= 0.75f * delta_time;
 	}
 
 	if (IsKeyDown(KEY_RIGHT)) {
-		scene->player.angle += 0.75f * delta_time;
+		angle += 0.75f * delta_time;
 	}
-
-	if (scene->player.angle < 0) {
-		scene->player.angle = 2 * PI - scene->player.angle;
-	} else if (scene->player.angle > 2 * PI) {
-		scene->player.angle = scene->player.angle - 2 * PI;
-	}
+	scene_rotate_player_camera(scene, angle);
 
 	if (IsKeyPressed(KEY_UP)) {
 		scene_place_teleport(scene, PORTAL_1);
