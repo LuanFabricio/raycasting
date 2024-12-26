@@ -27,23 +27,33 @@ void scene_get_block_points(u32 x, u32 y, float scale, vec2f32_t *out)
 
 void scene_teleport_player(scene_t *scene, const collision_block_t *collision_block)
 {
+	const bool hit_portal1_block = collision_block->block_ptr == scene->portal1.block_src;
+	const bool hit_portal1_face = collision_block->face == scene->portal1.face;
+
+	const bool hit_portal2_block = collision_block->block_ptr == scene->portal2.block_src;
+	const bool hit_portal2_face = collision_block->face == scene->portal2.face;
+
 	portal_t *portal_src = 0;
 	portal_t *portal_dest = 0;
+
 	entity_t *player_ptr = &scene->player;
-	if (collision_block->block_ptr == scene->portal1.block_src && collision_block->face == scene->portal1.face) {
+
+	if (hit_portal1_block && hit_portal1_face) {
 		player_ptr->position.x = scene->portal2.position.x;
 		player_ptr->position.y = scene->portal2.position.y;
 		portal_src = &scene->portal1;
 		portal_dest = &scene->portal2;
-	} else {
+	} else if (hit_portal2_block && hit_portal2_face) {
 		player_ptr->position.x = scene->portal1.position.x;
 		player_ptr->position.y = scene->portal1.position.y;
 		portal_src = &scene->portal2;
 		portal_dest = &scene->portal1;
+	} else {
+		return;
 	}
 
-	assert(portal_src != 0 && "It should be a pointer to a portal.");
-	assert(portal_dest != 0 && "It should be a pointer to a portal.");
+	assert(portal_src != 0 && "It should be a valid pointer to a portal.");
+	assert(portal_dest != 0 && "It should be a valid pointer to a portal.");
 
 	player_ptr->position.x += 0.5f;
 	player_ptr->position.y += 0.5f;
