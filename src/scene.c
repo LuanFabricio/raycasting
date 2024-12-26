@@ -115,12 +115,21 @@ void scene_place_teleport(scene_t *scene, portal_e portal_type)
 		       return;
 	}
 
-	portal_dest->block_dest = collision_block.block_ptr;
-
 	portal_src->block_src = collision_block.block_ptr;
 	portal_src->position = collision_block.position;
-	portal_src->block_dest = portal_dest->block_src;
 	portal_src->face = collision_block.face;
+
+	const bool same_block = portal_src->block_src == portal_dest->block_src;
+	const bool same_face = portal_src->face == portal_dest->face;
+
+	if (same_block && same_face) {
+		portal_dest->block_src = 0;
+		portal_dest->face = BLOCK_FACE_NONE;
+		portal_src->block_dest = 0;
+	} else {
+		portal_src->block_dest = portal_dest->block_src;
+		portal_dest->block_dest = collision_block.block_ptr;
+	}
 }
 
 void scene_move_player(scene_t *scene, const vec2f32_t speed)
