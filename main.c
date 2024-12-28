@@ -320,7 +320,6 @@ int main(void)
 		BeginDrawing();
 			ClearBackground(BLACK);
 
-			// TODO: Test game scale on window
 			DrawTexturePro(tex_game_image.texture,
 					(Rectangle) {.x = 0, .y = 0, .width = game_image.width, .height = game_image.height },
 					(Rectangle) {.x = 0, .y = 0, .width = GetScreenWidth(), .height = GetScreenHeight()},

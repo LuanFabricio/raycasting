@@ -151,7 +151,6 @@ void scene_move_player(scene_t *scene, const vec2f32_t speed)
 	}
 	else if (is_a_portal_block) {
 		scene_teleport_player(scene, &collision_block);
-		// TODO: Fix this
 		return;
 	} else {
 		switch (collision_block.face) {
@@ -178,7 +177,6 @@ void scene_move_player(scene_t *scene, const vec2f32_t speed)
 	}
 	else if (is_a_portal_block) {
 		scene_teleport_player(scene, &collision_block);
-		// TODO: Fix this
 		return;
 	} else {
 		switch (collision_block.face) {
