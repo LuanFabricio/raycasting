@@ -29,4 +29,6 @@
 #define RENDER_WIDTH 640
 #define RENDER_HEIGHT 320
 
+#define MAX_ENTITIES 32
+
 #endif // __SRC_DEFINES_H__

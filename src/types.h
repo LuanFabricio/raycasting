@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#include "defines.h"
+
 typedef float f32;
 typedef double f64;
 typedef unsigned char u8;
@@ -103,9 +105,15 @@ typedef struct {
 	u32 *pixels;
 } portal_t;
 
+typedef enum {
+	ENTITY_PLAYER	= 0x00,
+	ENTITY_ENEMY	= 0x01,
+} entity_e;
+
 typedef struct {
 	vec2f32_t position;
 	f32 angle;
+	entity_e type;
 } entity_t;
 
 typedef struct {
@@ -115,6 +123,8 @@ typedef struct {
 	entity_t player;
 	portal_t portal1;
 	portal_t portal2;
+	// TODO: Add entites (NPCs or enemies)
+	// entity_t entities[MAX_ENTITIES];
 } scene_t;
 
 typedef struct {
