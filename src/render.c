@@ -94,6 +94,45 @@ void render_block_texture_on_image(
 	}
 }
 
+void render_blocks(
+	const u32 x, const f32 y,
+	const u32 strip_width, const u32 strip_height,
+	const f32 shadow,
+	const u32 screen_height,
+	const collision_block_t *collision_block,
+	image_t *image
+)
+{
+	switch (collision_block->block_ptr->block_type) {
+		case BLOCK_COLOR: {
+			const u32 color = *(u32*)collision_block->block_ptr->data;
+			render_block_color_on_image(
+				x*strip_width, y,
+				strip_width, strip_height,
+				color, shadow,
+				image);
+		} break;
+
+		case BLOCK_BRICKS: {
+			const u32 src_x = render_get_texture_x(&collision_block->hit, collision_block->face);
+			const render_texture_t tex_data = {
+				.pixels = collision_block->block_ptr->data,
+				.coords = { src_x, y },
+				.strip = { strip_width, strip_height },
+				.size = { TEXTURE_SIZE, TEXTURE_SIZE },
+			};
+			render_block_texture_on_image(
+				&tex_data,
+				x*strip_width, screen_height,
+				shadow, image);
+
+		} break;
+
+		default:
+			break;
+	}
+}
+
 void render_portal(
 	const collision_block_t collision_block,
 	const u32 x, const f32 y,
@@ -154,36 +193,7 @@ void render_scene_on_image(
 
 		const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
 
-		switch (collision_block.block_ptr->block_type) {
-			case BLOCK_COLOR: {
-				const u32 color = *(u32*)collision_block.block_ptr->data;
-				render_block_color_on_image(
-					x*strip_width, y,
-					strip_width, strip_height,
-					color, shadow,
-					image);
-			} break;
-
-			case BLOCK_BRICKS: {
-				const u32 src_x = render_get_texture_x(&collision_block.hit, collision_block.face);
-				const render_texture_t tex_data = {
-					.pixels = collision_block.block_ptr->data,
-					.coords = { src_x, y },
-					.strip = { strip_width, strip_height },
-					.size = { TEXTURE_SIZE, TEXTURE_SIZE },
-				};
-				render_block_texture_on_image(
-					&tex_data,
-					x*strip_width, screen_height,
-					shadow, image);
-
-			} break;
-
-			default:
-				continue;
-				break;
-		}
-
+		render_blocks(x, y, strip_width, strip_height, shadow, screen_height, &collision_block, image);
 		render_portal(collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal1, image);
 		render_portal(collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal2, image);
 	}
