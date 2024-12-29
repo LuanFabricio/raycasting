@@ -212,7 +212,8 @@ int main(void)
 		.ceil_grid = ceil_grid,
 		.player = {
 			.position = {0},
-			.angle = BASE_ROTATION
+			.angle = BASE_ROTATION,
+			.type = ENTITY_PLAYER,
 		},
 		.portal1 = {0},
 		.portal2 = {0},
