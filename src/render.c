@@ -94,46 +94,7 @@ void render_block_texture_on_image(
 	}
 }
 
-void render_blocks(
-	const u32 x, const f32 y,
-	const u32 strip_width, const u32 strip_height,
-	const f32 shadow,
-	const u32 screen_height,
-	const collision_block_t *collision_block,
-	image_t *image
-)
-{
-	switch (collision_block->block_ptr->block_type) {
-		case BLOCK_COLOR: {
-			const u32 color = *(u32*)collision_block->block_ptr->data;
-			render_block_color_on_image(
-				x*strip_width, y,
-				strip_width, strip_height,
-				color, shadow,
-				image);
-		} break;
-
-		case BLOCK_BRICKS: {
-			const u32 src_x = render_get_texture_x(&collision_block->hit, collision_block->face);
-			const render_texture_t tex_data = {
-				.pixels = collision_block->block_ptr->data,
-				.coords = { src_x, y },
-				.strip = { strip_width, strip_height },
-				.size = { TEXTURE_SIZE, TEXTURE_SIZE },
-			};
-			render_block_texture_on_image(
-				&tex_data,
-				x*strip_width, screen_height,
-				shadow, image);
-
-		} break;
-
-		default:
-			break;
-	}
-}
-
-void render_portal(
+void render_block_portal(
 	const collision_block_t collision_block,
 	const u32 x, const f32 y,
 	const u32 strip_width, const u32 strip_height,
@@ -159,6 +120,57 @@ void render_portal(
 	}
 }
 
+void render_blocks(
+	const u32 x, const u32 strip_width, const u32 screen_height,
+	const scene_t *scene, const vec2f32_t player_ray, const vec2f32_t ray,
+	image_t *image
+)
+{
+	collision_block_t collision_block = collision_block_empty();
+	const bool res = collision_hit_a_block(
+			scene, scene->player.position, ray, &collision_block);
+
+	if (!res || collision_block.block_ptr->block_type == BLOCK_EMPTY) return;
+
+	const f32 perp_wall_dist = calc_perp_dist(&collision_block.hit, &scene->player.position, &player_ray);
+	const f32 strip_height = (f32)screen_height / perp_wall_dist;
+	const f32 y = (screen_height - strip_height) * 0.5f;
+
+	const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
+
+	switch (collision_block.block_ptr->block_type) {
+		case BLOCK_COLOR: {
+			const u32 color = *(u32*)collision_block.block_ptr->data;
+			render_block_color_on_image(
+				x*strip_width, y,
+				strip_width, strip_height,
+				color, shadow,
+				image);
+		} break;
+
+		case BLOCK_BRICKS: {
+			const u32 src_x = render_get_texture_x(&collision_block.hit, collision_block.face);
+			const render_texture_t tex_data = {
+				.pixels = collision_block.block_ptr->data,
+				.coords = { src_x, y },
+				.strip = { strip_width, strip_height },
+				.size = { TEXTURE_SIZE, TEXTURE_SIZE },
+			};
+			render_block_texture_on_image(
+				&tex_data,
+				x*strip_width, screen_height,
+				shadow, image);
+
+		} break;
+
+		default:
+			break;
+	}
+
+	render_block_portal(collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal1, image);
+	render_block_portal(collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal2, image);
+}
+
 void render_scene_on_image(
 	const scene_t *scene,
 	const u32 screen_width, const u32 screen_height,
@@ -179,22 +191,6 @@ void render_scene_on_image(
 		const f32 amount = (f32)x / (float)RENDER_WIDTH;
 		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
 
-		collision_block_t collision_block = collision_block_empty();
-		const bool res = collision_hit_a_block(
-				scene, scene->player.position, ray, &collision_block);
-
-		if (!res) continue;
-
-		vec2f32_t v = {0};
-		vec2f32_sub(&collision_block.hit, &scene->player.position, &v);
-		const f32 perp_wall_dist = vec2f32_dot(&v, &player_ray);
-		const f32 strip_height = (f32)screen_height / perp_wall_dist;
-		const f32 y = (screen_height - strip_height) * 0.5f;
-
-		const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
-
-		render_blocks(x, y, strip_width, strip_height, shadow, screen_height, &collision_block, image);
-		render_portal(collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal1, image);
-		render_portal(collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal2, image);
+		render_blocks(x, strip_width, screen_height, scene, player_ray, ray, image);
 	}
 }
