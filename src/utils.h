@@ -26,5 +26,6 @@ u32 color_channel_to_u32(u8 color, color_channel_e channel);
 u32 color_apply_shadow(u32 color_u32, f32 shadow);
 u32 blend_colors(const u32 src, const u32 dest);
 f32 update_player_angle(const portal_t *portal1, const portal_t *portal2);
+f32 calc_perp_dist(const vec2f32_t *hit, const vec2f32_t *pos, const vec2f32_t *pos_ray);
 
 #endif // __SRC_UTILS_H__

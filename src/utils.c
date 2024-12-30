@@ -101,3 +101,10 @@ f32 update_player_angle(const portal_t *portal_src, const portal_t *portal_dest)
 
 	return match_table[v1_face][v2_face];
 }
+
+f32 calc_perp_dist(const vec2f32_t *hit, const vec2f32_t *pos, const vec2f32_t *pos_ray)
+{
+	vec2f32_t hit_line = {0};
+	vec2f32_sub(hit, pos, &hit_line);
+	return vec2f32_dot(&hit_line, pos_ray);
+}
