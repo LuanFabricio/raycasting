@@ -31,4 +31,6 @@
 
 #define MAX_ENTITIES 32
 
+#define MAX_THREADS 4
+
 #endif // __SRC_DEFINES_H__
