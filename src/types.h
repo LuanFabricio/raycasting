@@ -135,9 +135,13 @@ typedef struct {
 } collision_block_t;
 
 typedef struct {
-	u32 strip_width;
-	u32 screen_height;
+	const u32 strip_width;
+	const u32 screen_height;
 	const scene_t* scene;
+
+	const vec2f32_t *fov_plane;
+	const vec2f32_t player_ray;
+
 	image_t* image;
 } render_base_data_t;
 
