@@ -134,4 +134,17 @@ typedef struct {
 	vec2u32_t position;
 } collision_block_t;
 
+typedef struct {
+	u32 strip_width;
+	u32 screen_height;
+	const scene_t* scene;
+	image_t* image;
+} render_base_data_t;
+
+typedef struct {
+	u32 start;
+	u32 end;
+	render_base_data_t *base_data;
+} render_data_t;
+
 #endif // __SRC_TYPES_H__
