@@ -1,4 +1,6 @@
 #include <math.h>
+#include <pthread.h>
+#include <stdio.h>
 
 #include "collision.h"
 #include "types.h"
@@ -171,6 +173,30 @@ void render_blocks(
 	render_block_portal(collision_block, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal2, image);
 }
 
+void* _render_blocks_slice(void* data)
+{
+	render_data_t* slice_data = (render_data_t*)data;
+
+	const scene_t *scene = slice_data->base_data->scene;
+	vec2f32_t fov_plane[2] = {0};
+	get_fov_plane(scene->player.position, scene->player.angle, FAR_DISTANCE, fov_plane);
+
+	vec2f32_t player_ray = vec2f32_from_angle(scene->player.angle);
+	vec2f32_norm(&player_ray, &player_ray);
+
+	const u32 strip_width = slice_data->base_data->strip_width;
+	const u32 screen_height = slice_data->base_data->screen_height;
+	image_t* image = slice_data->base_data->image;
+	for (u32 x = slice_data->start; x < slice_data->end; x++) {
+		vec2f32_t ray = {0};
+		const f32 amount = (f32)x / (float)RENDER_WIDTH;
+		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
+		render_blocks(x, strip_width, screen_height, scene, player_ray, ray, image);
+	}
+
+	return 0;
+}
+
 void render_scene_on_image(
 	const scene_t *scene,
 	const u32 screen_width, const u32 screen_height,
@@ -186,11 +212,24 @@ void render_scene_on_image(
 	vec2f32_t player_ray = vec2f32_from_angle(scene->player.angle);
 	vec2f32_norm(&player_ray, &player_ray);
 
-	for (u32 x = 0; x < RENDER_WIDTH; x++) {
-		vec2f32_t ray = {0};
-		const f32 amount = (f32)x / (float)RENDER_WIDTH;
-		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
+	pthread_t threads[MAX_THREADS];
+	render_data_t slice_data[MAX_THREADS] = {0};
+	render_base_data_t base_data = {
+		.scene = scene,
+		.strip_width = strip_width,
+		.screen_height = screen_height,
+		.image = image,
+	};
 
-		render_blocks(x, strip_width, screen_height, scene, player_ray, ray, image);
+	const u32 step = RENDER_WIDTH / MAX_THREADS;
+	for (u32 i = 0; i < MAX_THREADS; i++) {
+		slice_data[i].base_data = &base_data;
+		slice_data[i].start = step * i;
+		slice_data[i].end = step * (i+1);
+		pthread_create(&threads[i], 0, _render_blocks_slice, (void*)&slice_data[i]);
+	}
+
+	for (u32 i = 0; i < MAX_THREADS; i++) {
+		pthread_join(threads[i], 0);
 	}
 }
