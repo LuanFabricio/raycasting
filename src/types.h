@@ -117,6 +117,11 @@ typedef struct {
 } entity_t;
 
 typedef struct {
+	entity_t data[MAX_ENTITIES];
+	u32 lenght;
+} entity_array_t;
+
+typedef struct {
 	u32 width, height;
 	block_t* blocks;
 	ceil_e* ceil_grid;
@@ -124,7 +129,7 @@ typedef struct {
 	portal_t portal1;
 	portal_t portal2;
 	// TODO: Add entites (NPCs or enemies)
-	// entity_t entities[MAX_ENTITIES];
+	entity_array_t entities;
 } scene_t;
 
 typedef struct {
@@ -133,6 +138,11 @@ typedef struct {
 	vec2f32_t hit;
 	vec2u32_t position;
 } collision_block_t;
+
+typedef struct {
+	entity_t *entity_ptr;
+	vec2f32_t hit;
+} collision_entity_t;
 
 typedef struct {
 	const u32 strip_width;
