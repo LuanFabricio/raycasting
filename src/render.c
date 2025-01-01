@@ -211,6 +211,8 @@ void render_entity(
 	const f32 y = (screen_height - strip_height) * 0.5f;
 
 	const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
+	// BUG: The sprite become wider when the placer faces the
+	// expected RIGHT or LEFT side.
 	const u32 src_x = render_get_texture_x(&collision_entity.hit, BLOCK_FACE_DOWN);
 	const render_texture_t tex_data = {
 		.pixels = scene->portal1.pixels,
