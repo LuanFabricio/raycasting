@@ -129,8 +129,7 @@ void render_blocks(
 )
 {
 	collision_block_t collision_block = collision_block_empty();
-	const bool res = collision_hit_a_block(
-			scene, scene->player.position, ray, &collision_block);
+	const bool res = collision_hit_a_block(scene, scene->player.position, ray, &collision_block);
 
 	if (!res || collision_block.block_ptr->block_type == BLOCK_EMPTY) return;
 
@@ -175,7 +174,7 @@ void render_blocks(
 
 void* _render_blocks_slice(void* data)
 {
-	render_data_t* slice_data = (render_data_t*)data;
+	render_data_t *slice_data = (render_data_t*)data;
 
 	const scene_t *scene = slice_data->base_data->scene;
 	const vec2f32_t *fov_plane = slice_data->base_data->fov_plane;
@@ -190,6 +189,60 @@ void* _render_blocks_slice(void* data)
 		const f32 amount = (f32)x / (float)RENDER_WIDTH;
 		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
 		render_blocks(x, strip_width, screen_height, scene, player_ray, ray, image);
+	}
+
+	return 0;
+}
+
+void render_entity(
+	const u32 x, const u32 strip_width, const u32 screen_height,
+	const scene_t *scene,
+	const vec2f32_t player_ray, const vec2f32_t ray,
+	image_t* image
+)
+{
+	collision_entity_t collision_entity = collision_entity_empty();
+	const bool res = collision_hit_an_entity(scene, scene->player.position, ray, &collision_entity);
+
+	if (!res) return;
+
+	const f32 perp_wall_dist = calc_perp_dist(&collision_entity.entity_ptr->position, &scene->player.position, &player_ray);
+	const f32 strip_height = (f32)screen_height / perp_wall_dist;
+	const f32 y = (screen_height - strip_height) * 0.5f;
+
+	const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
+	const u32 src_x = render_get_texture_x(&collision_entity.hit, BLOCK_FACE_DOWN);
+	const render_texture_t tex_data = {
+		.pixels = scene->portal1.pixels,
+		// .pixels = scene->blocks[xy_to_index(5, 2, scene->width)].data,
+		.coords = { src_x, y },
+		.strip = { strip_width, strip_height },
+		.size = { TEXTURE_SIZE, TEXTURE_SIZE },
+	};
+	render_block_texture_on_image(
+		&tex_data,
+		x*strip_width, screen_height,
+		shadow, image);
+
+}
+
+void* _render_entities_slice(void* data)
+{
+	render_data_t *slice_data = (render_data_t*)data;
+
+	const scene_t *scene = slice_data->base_data->scene;
+	const vec2f32_t *fov_plane = slice_data->base_data->fov_plane;
+	const vec2f32_t player_ray = slice_data->base_data->player_ray;
+
+	const u32 strip_width = slice_data->base_data->strip_width;
+	const u32 screen_height = slice_data->base_data->screen_height;
+	image_t* image = slice_data->base_data->image;
+
+	for (u32 x = slice_data->start; x < slice_data->end; x++) {
+		vec2f32_t ray = {0};
+		const f32 amount = (f32)x / (float)RENDER_WIDTH;
+		vec2f32_lerp(&fov_plane[0], &fov_plane[1], amount, &ray);
+		render_entity(x, strip_width, screen_height, scene, player_ray, ray, image);
 	}
 
 	return 0;
@@ -227,6 +280,17 @@ void render_scene_on_image(
 		slice_data[i].start = step * i;
 		slice_data[i].end = step * (i+1);
 		pthread_create(&threads[i], 0, _render_blocks_slice, (void*)&slice_data[i]);
+	}
+
+	for (u32 i = 0; i < MAX_THREADS; i++) {
+		pthread_join(threads[i], 0);
+	}
+
+	for (u32 i = 0; i < MAX_THREADS; i++) {
+		slice_data[i].base_data = &base_data;
+		slice_data[i].start = step * i;
+		slice_data[i].end = step * (i+1);
+		pthread_create(&threads[i], 0, _render_entities_slice, (void*)&slice_data[i]);
 	}
 
 	for (u32 i = 0; i < MAX_THREADS; i++) {
