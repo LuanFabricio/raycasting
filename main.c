@@ -217,9 +217,19 @@ int main(void)
 		},
 		.portal1 = {0},
 		.portal2 = {0},
+		.entities = {
+			.data = {0},
+			.lenght = 0,
+		},
 	};
 	scene.player.position.x = scene.width / 2.0f;
 	scene.player.position.y = scene.height / 2.0f;
+
+	scene.entities.data[0].type = ENTITY_ENEMY;
+	scene.entities.data[0].position.x = 5.5;
+	scene.entities.data[0].position.y = 5.0;
+	scene.entities.data[0].angle = 0.f;
+	scene.entities.lenght = 1;
 
 	u32 colors[] = {
 		0xffff0000, // BLUE
