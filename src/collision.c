@@ -18,6 +18,14 @@ collision_block_t collision_block_empty()
 	};
 }
 
+collision_entity_t collision_entity_empty()
+{
+	return (collision_entity_t) {
+		.entity_ptr = 0,
+		.hit = {0},
+	};
+}
+
 bool collision_intersects(vec2f32_t s1, vec2f32_t e1, vec2f32_t s2, vec2f32_t e2, vec2f32_t *out)
 {
 	f32 dx = e1.x - s1.x;
@@ -164,6 +172,40 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 					}
 				}
 
+				have_hit = true;
+			}
+		}
+	}
+
+	return have_hit;
+}
+
+bool collision_hit_an_entity(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, collision_entity_t *collision_entity)
+{
+	bool have_hit = false;
+	f32 dist = FLT_MAX;
+	vec2f32_t current_hit = {0};
+
+	const vec2f32_t entity_ray = vec2f32_from_angle(scene->player.angle + PI / 2);
+	for (u32 i = 0; i < scene->entities.lenght; i++) {
+		const vec2f32_t pos = scene->entities.data[i].position;
+		const vec2f32_t pos1 = {
+			.x = pos.x - entity_ray.x * 0.5f,
+			.y = pos.y - entity_ray.y * 0.5f,
+		};
+
+		const vec2f32_t pos2 = {
+			.x = pos.x + entity_ray.x * 0.5f,
+			.y = pos.y + entity_ray.y * 0.5f,
+		};
+		if (collision_intersects(p1, p2, pos1, pos2, &current_hit)) {
+			f32 current_dist = vec2f32_distance(&p1, &current_hit);
+			if (current_dist < dist) {
+				dist = current_dist;
+				if (collision_entity != 0) {
+					collision_entity->entity_ptr = &scene->entities.data[i];
+					collision_entity->hit = current_hit;
+				}
 				have_hit = true;
 			}
 		}
