@@ -186,17 +186,17 @@ bool collision_hit_an_entity(const scene_t *scene, const vec2f32_t p1, const vec
 	f32 dist = FLT_MAX;
 	vec2f32_t current_hit = {0};
 
-	const vec2f32_t entity_ray = vec2f32_from_angle(scene->player.angle + PI / 2);
+	const vec2f32_t entity_ray = vec2f32_from_angle(scene->player.angle + PI);
 	for (u32 i = 0; i < scene->entities.lenght; i++) {
 		const vec2f32_t pos = scene->entities.data[i].position;
 		const vec2f32_t pos1 = {
-			.x = pos.x - entity_ray.x * 0.5f,
-			.y = pos.y - entity_ray.y * 0.5f,
+			.x = pos.x + entity_ray.y * 0.5f,
+			.y = pos.y - entity_ray.x * 0.5f,
 		};
 
 		const vec2f32_t pos2 = {
-			.x = pos.x + entity_ray.x * 0.5f,
-			.y = pos.y + entity_ray.y * 0.5f,
+			.x = pos.x - entity_ray.y * 0.5f,
+			.y = pos.y + entity_ray.x * 0.5f,
 		};
 		if (collision_intersects(p1, p2, pos1, pos2, &current_hit)) {
 			f32 current_dist = vec2f32_distance(&p1, &current_hit);
