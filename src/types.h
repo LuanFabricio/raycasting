@@ -138,11 +138,13 @@ typedef struct {
 	block_face_e face;
 	vec2f32_t hit;
 	vec2u32_t position;
+	f32 dist;
 } collision_block_t;
 
 typedef struct {
 	entity_t *entity_ptr;
 	vec2f32_t hit;
+	f32 dist;
 } collision_entity_t;
 
 typedef struct {
