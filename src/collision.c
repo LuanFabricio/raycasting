@@ -171,6 +171,7 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 						collision_block->position = block_pos;
 						collision_block->block_ptr = &scene->blocks[i];
 						collision_block->face = j >> 1;
+						collision_block->dist = dist;
 					}
 				}
 
@@ -207,6 +208,7 @@ bool collision_hit_an_entity(const scene_t *scene, const vec2f32_t p1, const vec
 				if (collision_entity != 0) {
 					collision_entity->entity_ptr = &scene->entities.data[i];
 					collision_entity->hit = current_hit;
+					collision_entity->dist = dist;
 				}
 				have_hit = true;
 			}
