@@ -28,6 +28,15 @@ void vec2f32_rot90(const vec2f32_t *v, vec2f32_t *dest)
 	dest->y = y;
 }
 
+void vec2f32_rot(const vec2f32_t *src, const f32 angle, vec2f32_t *dest)
+{
+	const f32 x = src->x * cosf(angle) - src->y * sinf(angle);
+	const f32 y = src->x * sinf(angle) + src->y * cosf(angle);
+
+	dest->x = x;
+	dest->y = y;
+}
+
 void vec2f32_add(const vec2f32_t *v1, const vec2f32_t *v2, vec2f32_t *dest)
 {
 	dest->x = v1->x + v2->x;
