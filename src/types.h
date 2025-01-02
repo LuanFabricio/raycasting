@@ -130,6 +130,7 @@ typedef struct {
 	portal_t portal2;
 	// TODO: Add entites (NPCs or enemies)
 	entity_array_t entities;
+	const u32* debug_texture;
 } scene_t;
 
 typedef struct {
