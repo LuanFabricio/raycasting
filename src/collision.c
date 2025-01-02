@@ -15,6 +15,7 @@ collision_block_t collision_block_empty()
 		.face = BLOCK_FACE_NONE,
 		.hit = {0},
 		.position = {0},
+		.dist = FLT_MAX,
 	};
 }
 
@@ -23,6 +24,7 @@ collision_entity_t collision_entity_empty()
 	return (collision_entity_t) {
 		.entity_ptr = 0,
 		.hit = {0},
+		.dist = FLT_MAX,
 	};
 }
 
