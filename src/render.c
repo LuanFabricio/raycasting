@@ -1,6 +1,5 @@
 #include <math.h>
 #include <pthread.h>
-#include <stdio.h>
 
 #include "collision.h"
 #include "types.h"
@@ -211,11 +210,14 @@ void render_entity(
 	const f32 y = (screen_height - strip_height) * 0.5f;
 
 	const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
-	// BUG: The sprite become wider when the placer faces the
-	// expected RIGHT or LEFT side.
-	const u32 src_x = render_get_texture_x(&collision_entity.hit, BLOCK_FACE_DOWN);
+
+	const block_face_e face = (scene->player.angle < PI) ? BLOCK_FACE_DOWN : BLOCK_FACE_UP;
+	vec2f32_t plane_hit = {0};
+	vec2f32_rot(&collision_entity.hit, PI, &plane_hit);
+	const u32 src_x = render_get_texture_x(&plane_hit, face);
+
 	const render_texture_t tex_data = {
-		.pixels = scene->portal1.pixels,
+		.pixels = scene->debug_texture,
 		// .pixels = scene->blocks[xy_to_index(5, 2, scene->width)].data,
 		.coords = { src_x, y },
 		.strip = { strip_width, strip_height },
