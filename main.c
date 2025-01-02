@@ -180,8 +180,12 @@ int main(void)
 	Color *portal1_cs = LoadImageColors(portal1_img);
 	Image portal2_img = LoadImage("assets/textures/portal2.png");
 	Color *portal2_cs = LoadImageColors(portal2_img);
+	Image debug_img = LoadImage("assets/textures/debug.png");
+	Color *debug_cs = LoadImageColors(debug_img);
+
 	u32 portal1_pixels[TEXTURE_SIZE*TEXTURE_SIZE] = {0};
 	u32 portal2_pixels[TEXTURE_SIZE*TEXTURE_SIZE] = {0};
+	u32 debug_pixels[TEXTURE_SIZE*TEXTURE_SIZE] = {0};
 	for (u32 x = 0; x < TEXTURE_SIZE; x++) {
 		for (u32 y = 0; y < TEXTURE_SIZE; y++) {
 			const u32 tex_index = TEXTURE_SIZE * y + x;
@@ -193,10 +197,15 @@ int main(void)
 						 | (portal2_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
 						 | (portal2_cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
 						 | (portal2_cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
+			debug_pixels[tex_index] = (debug_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
+						 | (debug_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
+						 | (debug_cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
+						 | (debug_cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
 		}
 	}
 	UnloadImage(portal1_img);
 	UnloadImage(portal2_img);
+	UnloadImage(debug_img);
 
 	block_t blocks[SCENE_WIDTH*SCENE_HEIGHT] = {0};
 	ceil_e ceil_grid[SCENE_WIDTH*SCENE_HEIGHT] = {0};
@@ -221,6 +230,7 @@ int main(void)
 			.data = {0},
 			.lenght = 0,
 		},
+		.debug_texture = debug_pixels,
 	};
 	scene.player.position.x = scene.width / 2.0f;
 	scene.player.position.y = scene.height / 2.0f;
