@@ -13,60 +13,6 @@
 
 #include "src/render.h"
 #include "src/scene.h"
-#include "src/collision.h"
-
-void draw_step_function(const scene_t *scene)
-{
-	const f32 base_rotation = -PI / 2; // 90°
-	const f32 final_angle = base_rotation + scene->player.angle;
-	const f32 x_rotation = cos(final_angle);
-	const f32 y_rotation = sin(final_angle);
-
-	const u32 steps = 5;
-	const f32 ray_step = FAR_DISTANCE / steps;
-
-	Vector2 p1 = *(Vector2*)&scene->player.position;
-	Vector2 p2 = {};
-
-	const u32 blocks_len = scene->width * scene->height;
-	Color color = WHITE;
-	for (u32 i = 1; i <= steps; i++) {
-		p2.x = x_rotation * ray_step + p1.x;
-		p2.y = y_rotation * ray_step + p1.y;
-
-		i32 block_index = collision_point_in_block(scene->blocks, blocks_len, scene->width, CAST_TYPE(vec2f32_t, p2));
-
-		bool res = false;
-		vec2f32_t intersection_point = {0};
-
-		if (block_index != -1) {
-			color = PURPLE;
-
-			vec2u32_t point = index_to_xy(block_index, scene->width);
-			vec2f32_t block_points[4] = {0};
-			scene_get_block_points(point.x, point.y, BLOCK_SIZE, block_points);
-
-			u32 lines[] = { 0, 1, 1, 2, 2, 3, 3, 0};
-			for (u32 i = 0; i < 8; i+=2) {
-				res = collision_intersects(
-					CAST_TYPE(vec2f32_t, p1), CAST_TYPE(vec2f32_t, p2),
-					block_points[lines[i]], block_points[lines[i+1]],
-					&intersection_point);
-
-				if (res) break;
-			}
-		}
-
-		DrawLineV(p1, p2, color);
-		DrawCircleV(p2, 2, color);
-		if(res) {
-			DrawCircleV(CAST_TYPE(Vector2, intersection_point), 1, GREEN);
-		}
-
-		p1.x = p2.x;
-		p1.y = p2.y;
-	}
-}
 
 void draw_grid(const block_t *blocks, u32 width, u32 height)
 {
@@ -208,17 +154,11 @@ int main(void)
 	UnloadImage(debug_img);
 
 	block_t blocks[SCENE_WIDTH*SCENE_HEIGHT] = {0};
-	ceil_e ceil_grid[SCENE_WIDTH*SCENE_HEIGHT] = {0};
-
-	for (u32 i = 0; i < SCENE_WIDTH*SCENE_HEIGHT; i++) {
-		ceil_grid[i] = i % 2 == 0 ? CEIL_BLUE : CEIL_RED;
-	}
 
 	scene_t scene = {
 		.width = SCENE_WIDTH,
 		.height = SCENE_HEIGHT,
 		.blocks = blocks,
-		.ceil_grid = ceil_grid,
 		.player = {
 			.position = {0},
 			.angle = BASE_ROTATION,

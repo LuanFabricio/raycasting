@@ -40,7 +40,7 @@ typedef struct {
 } box_t;
 
 typedef struct {
-	u32 *pixels;
+	const u32 *pixels;
 	vec2i32_t coords;
 	vec2f32_t strip;
 	vec2u32_t size;
@@ -48,7 +48,6 @@ typedef struct {
 
 typedef enum { BLOCK_EMPTY, BLOCK_COLOR, BLOCK_BRICKS } block_type_e;
 
-typedef enum { CEIL_NONE, CEIL_BLUE, CEIL_RED } ceil_e;
 typedef enum {
 	BLOCK_FACE_UP	 = 0x00,
 	BLOCK_FACE_RIGHT = 0x01,
@@ -98,8 +97,8 @@ typedef struct {
 } block_t;
 
 typedef struct {
-	block_t* block_src;
-	block_t* block_dest;
+	const block_t* block_src;
+	const block_t* block_dest;
 	vec2u32_t position;
 	block_face_e face;
 	u32 *pixels;
@@ -124,7 +123,6 @@ typedef struct {
 typedef struct {
 	u32 width, height;
 	block_t* blocks;
-	ceil_e* ceil_grid;
 	entity_t player;
 	portal_t portal1;
 	portal_t portal2;
@@ -134,7 +132,7 @@ typedef struct {
 } scene_t;
 
 typedef struct {
-	block_t *block_ptr;
+	const block_t *block_ptr;
 	block_face_e face;
 	vec2f32_t hit;
 	vec2u32_t position;
@@ -142,7 +140,7 @@ typedef struct {
 } collision_block_t;
 
 typedef struct {
-	entity_t *entity_ptr;
+	const entity_t *entity_ptr;
 	vec2f32_t hit;
 	f32 dist;
 } collision_entity_t;
@@ -163,5 +161,15 @@ typedef struct {
 	u32 end;
 	render_base_data_t *base_data;
 } render_data_t;
+
+typedef enum {
+	TEXTURE_INDEX_RED_CROSS = 0,
+	TEXTURE_INDEX_RED_BRICKS,
+	TEXTURE_INDEX_BRICKS_IMG,
+	TEXTURE_INDEX_PORTAL1,
+	TEXTURE_INDEX_PORTAL2,
+	TEXTURE_INDEX_DEBUG,
+	TEXTURE_INDEX_NONE,
+} texture_e;
 
 #endif // __SRC_TYPES_H__
