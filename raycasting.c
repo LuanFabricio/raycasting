@@ -127,7 +127,7 @@ void load_textures(scene_t *scene)
 			const u32 tex_index = TEXTURE_SIZE * y + x;
 
 			scene->tex_map.cross_blue[tex_index] = (0xff << (8 * 3)) | (0xfe * (x != y && x != TEXTURE_SIZE - y)) << (8 *  2); // RED with a black cross.
-			scene->tex_map.bricks_red[tex_index] = (0xff << (8 * 3)) | (0xc0 * (x % 16 && y % 16)) << (8 *  1); // RED bricks.
+			scene->tex_map.bricks_green[tex_index] = (0xff << (8 * 3)) | (0xc0 * (x % 16 && y % 16)) << (8 *  1); // RED bricks.
 
 			scene->tex_map.brick_img[tex_index] = (bricks_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
 						| (bricks_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
@@ -199,7 +199,7 @@ void load_blocks(scene_t *scene)
 	};
 	scene->blocks[xy_to_index(7, 2, scene->width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
-		.data = scene->tex_map.bricks_red,
+		.data = scene->tex_map.bricks_green,
 	};
 	scene->blocks[xy_to_index(9, 2, scene->width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
