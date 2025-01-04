@@ -1,9 +1,16 @@
 dependencies = $(shell find src/ -type f -name '*.c') raycasting.c
 flags = -O2 -Wall -Wextra
 
-all: build-folder
-	# TODO: Add a recompile only for modified files
-	gcc -o build/core.so $(dependencies) $(flags) -lm -fPIC -shared
+OBJS = $(dependencies:.c=.o)
+TARGET = core.so
+
+all: build-folder $(TARGET)
+
+$(TARGET): $(OBJS)
+	gcc $(flags) -o build/$@ $^ -lm -shared
+
+%.o: %.c
+	gcc $(flags) -fPIC -c $< -o $@
 
 main: all
 	gcc -g -o build/main.out main.c -lraylib
@@ -16,3 +23,4 @@ build-folder:
 
 clean:
 	rm -rf build
+	rm $(shell find . -type f -name '*.o')
