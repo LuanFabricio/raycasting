@@ -9,6 +9,7 @@ typedef float f32;
 typedef double f64;
 typedef unsigned char u8;
 typedef unsigned int u32;
+typedef unsigned long int u64;
 typedef int i32;
 
 #ifndef __bool_true_false_are_defined
@@ -121,23 +122,32 @@ typedef struct {
 } entity_array_t;
 
 typedef struct {
-	u32 *bricks_red;
-	u32 *cross_blue;
-	u32 *brick_img;
-	u32 *portal1;
-	u32 *portal2;
-	u32 *debug;
+	u32 bricks_red[TEXTURE_SIZE*TEXTURE_SIZE];
+	u32 cross_blue[TEXTURE_SIZE*TEXTURE_SIZE];
+	u32 brick_img[TEXTURE_SIZE*TEXTURE_SIZE];
+	u32 portal1[TEXTURE_SIZE*TEXTURE_SIZE];
+	u32 portal2[TEXTURE_SIZE*TEXTURE_SIZE];
+	u32 debug[TEXTURE_SIZE*TEXTURE_SIZE];
 } texture_map_t;
 
 typedef struct {
+	u32 blue;
+	u32 red;
+	u32 green;
+	u32 white;
+	u32 grey;
+} color_map_t;
+
+typedef struct {
 	u32 width, height;
-	block_t* blocks;
+	block_t blocks[SCENE_WIDTH*SCENE_HEIGHT];
 	entity_t player;
 	portal_t portal1;
 	portal_t portal2;
 	// TODO: Add entites (NPCs or enemies)
 	entity_array_t entities;
-	const texture_map_t tex_map;
+	texture_map_t tex_map;
+	color_map_t color_map;
 } scene_t;
 
 typedef struct {
