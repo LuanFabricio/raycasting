@@ -102,6 +102,7 @@ void render_block_portal(
 	const u32 screen_height,
 	const f32 shadow,
 	const portal_t *portal_ptr,
+	const u32 *pixels,
 	image_t *image
 )
 {
@@ -112,7 +113,7 @@ void render_block_portal(
 			.coords = { render_get_texture_x(&cb->hit, cb->face), y },
 			.strip = { strip_width, strip_height },
 			.size = { TEXTURE_SIZE, TEXTURE_SIZE },
-			.pixels = portal_ptr->pixels,
+			.pixels = pixels,
 		};
 		render_block_texture_on_image(
 			&tex_data,
@@ -163,8 +164,8 @@ void render_blocks(
 			break;
 	}
 
-	render_block_portal(cb, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal1, image);
-	render_block_portal(cb, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal2, image);
+	render_block_portal(cb, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal1, scene->tex_map.portal1, image);
+	render_block_portal(cb, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal2, scene->tex_map.portal2, image);
 }
 
 void render_entity(
