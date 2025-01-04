@@ -217,8 +217,3 @@ bool collision_hit_an_entity(const scene_t *scene, const vec2f32_t p1, const vec
 
 	return have_hit;
 }
-
-bool collision_hit_ceil(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, vec2f32_t *hit, ceil_e *ceil)
-{
-	return false;
-}

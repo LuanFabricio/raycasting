@@ -121,6 +121,15 @@ typedef struct {
 } entity_array_t;
 
 typedef struct {
+	u32 *bricks_red;
+	u32 *cross_blue;
+	u32 *brick_img;
+	u32 *portal1;
+	u32 *portal2;
+	u32 *debug;
+} texture_map_t;
+
+typedef struct {
 	u32 width, height;
 	block_t* blocks;
 	entity_t player;
@@ -128,7 +137,7 @@ typedef struct {
 	portal_t portal2;
 	// TODO: Add entites (NPCs or enemies)
 	entity_array_t entities;
-	const u32* debug_texture;
+	const texture_map_t tex_map;
 } scene_t;
 
 typedef struct {
@@ -161,15 +170,5 @@ typedef struct {
 	u32 end;
 	render_base_data_t *base_data;
 } render_data_t;
-
-typedef enum {
-	TEXTURE_INDEX_RED_CROSS = 0,
-	TEXTURE_INDEX_RED_BRICKS,
-	TEXTURE_INDEX_BRICKS_IMG,
-	TEXTURE_INDEX_PORTAL1,
-	TEXTURE_INDEX_PORTAL2,
-	TEXTURE_INDEX_DEBUG,
-	TEXTURE_INDEX_NONE,
-} texture_e;
 
 #endif // __SRC_TYPES_H__

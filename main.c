@@ -2,6 +2,7 @@
 #include <math.h>
 #include <float.h>
 #include <limits.h>
+#include <stdlib.h>
 #include "raylib.h"
 
 #include "src/image.h"
@@ -115,12 +116,10 @@ void update_player(scene_t *scene, f32 delta_time)
 	}
 }
 
-int main(void)
+void load_textures(texture_map_t *tex_map)
 {
-	InitWindow(SCREEN_WITDH, SCREEN_HEIGHT, "RayCast");
-
 	Image brick_img = LoadImage("assets/textures/bricksx64.png");
-	Color *cs = LoadImageColors(brick_img);
+	Color *bricks_cs = LoadImageColors(brick_img);
 
 	Image portal1_img = LoadImage("assets/textures/portal1.png");
 	Color *portal1_cs = LoadImageColors(portal1_img);
@@ -129,30 +128,52 @@ int main(void)
 	Image debug_img = LoadImage("assets/textures/debug.png");
 	Color *debug_cs = LoadImageColors(debug_img);
 
-	u32 portal1_pixels[TEXTURE_SIZE*TEXTURE_SIZE] = {0};
-	u32 portal2_pixels[TEXTURE_SIZE*TEXTURE_SIZE] = {0};
-	u32 debug_pixels[TEXTURE_SIZE*TEXTURE_SIZE] = {0};
-	for (u32 x = 0; x < TEXTURE_SIZE; x++) {
-		for (u32 y = 0; y < TEXTURE_SIZE; y++) {
+	const u32 tex_bytes = sizeof(u32) * TEXTURE_SIZE * TEXTURE_SIZE;
+	tex_map->cross_blue = malloc(tex_bytes);
+	tex_map->bricks_red = malloc(tex_bytes);
+	tex_map->brick_img = malloc(tex_bytes);
+	tex_map->portal1 = malloc(tex_bytes);
+	tex_map->portal2 = malloc(tex_bytes);
+	tex_map->debug = malloc(tex_bytes);
+	for (u32 y = 0; y < TEXTURE_SIZE; y++) {
+		for (u32 x = 0; x < TEXTURE_SIZE; x++) {
 			const u32 tex_index = TEXTURE_SIZE * y + x;
-			portal1_pixels[tex_index] = (portal1_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
+
+			tex_map->cross_blue[tex_index] = (0xff << (8 * 3)) | (0xfe * (x != y && x != TEXTURE_SIZE - y)) << (8 *  2); // RED with a black cross.
+			tex_map->bricks_red[tex_index] = (0xff << (8 * 3)) | (0xc0 * (x % 16 && y % 16)) << (8 *  1); // RED bricks.
+
+			tex_map->brick_img[tex_index] = (bricks_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
+						| (bricks_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
+						| (bricks_cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
+						| (bricks_cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
+
+			tex_map->portal1[tex_index] = (portal1_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
 						 | (portal1_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
 						 | (portal1_cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
 						 | (portal1_cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
-			portal2_pixels[tex_index] = (portal2_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
+			tex_map->portal2[tex_index] = (portal2_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
 						 | (portal2_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
 						 | (portal2_cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
 						 | (portal2_cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
-			debug_pixels[tex_index] = (debug_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
+			tex_map->debug[tex_index] = (debug_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
 						 | (debug_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
 						 | (debug_cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
 						 | (debug_cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
 		}
 	}
+
 	UnloadImage(portal1_img);
 	UnloadImage(portal2_img);
 	UnloadImage(debug_img);
 
+}
+
+int main(void)
+{
+	InitWindow(SCREEN_WITDH, SCREEN_HEIGHT, "RayCast");
+
+	texture_map_t tex_map = {0};
+	load_textures(&tex_map);
 	block_t blocks[SCENE_WIDTH*SCENE_HEIGHT] = {0};
 
 	scene_t scene = {
@@ -170,7 +191,7 @@ int main(void)
 			.data = {0},
 			.lenght = 0,
 		},
-		.debug_texture = debug_pixels,
+		.tex_map = tex_map,
 	};
 	scene.player.position.x = scene.width / 2.0f;
 	scene.player.position.y = scene.height / 2.0f;
@@ -213,45 +234,31 @@ int main(void)
 		.data = &colors[4],
 	};
 
-	u32 textures[3][TEXTURE_SIZE*TEXTURE_SIZE] = {0};
-	for (u32 x = 0; x < TEXTURE_SIZE; x++) {
-		for (u32 y = 0; y < TEXTURE_SIZE; y++) {
-			const u32 tex_index = TEXTURE_SIZE * y + x;
-			textures[0][tex_index] = (0xff << (8 * 3)) | (0xfe * (x != y && x != TEXTURE_SIZE - y)) << (8 *  2); // RED with a black cross.
-			textures[1][tex_index] = (0xff << (8 * 3)) | (0xc0 * (x % 16 && y % 16)) << (8 *  1); // RED bricks.
-
-			textures[2][tex_index] = (cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
-						| (cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
-						| (cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
-						| (cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
-		}
-	}
-
 	scene.blocks[xy_to_index(5, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
-		.data = &textures[0],
+		.data = scene.tex_map.cross_blue,
 	};
 	scene.blocks[xy_to_index(7, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
-		.data = &textures[1],
+		.data = scene.tex_map.bricks_red,
 	};
 	scene.blocks[xy_to_index(9, 2, scene.width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
-		.data = &textures[2],
+		.data = scene.tex_map.brick_img,
 	};
 	scene.portal1 = (portal_t){
 		.position = (vec2u32_t) { .x = 5, .y = 2 },
 		.block_src = &scene.blocks[xy_to_index(5, 2, scene.width)],
 		.block_dest = &scene.blocks[xy_to_index(9, 2, scene.width)],
 		.face = BLOCK_FACE_DOWN,
-		.pixels = portal1_pixels,
+		.pixels = scene.tex_map.portal1,
 	};
 	scene.portal2 = (portal_t){
 		.position = (vec2u32_t) { .x = 9, .y = 2 },
 		.block_src = &scene.blocks[xy_to_index(9, 2, scene.width)],
 		.block_dest = &scene.blocks[xy_to_index(5, 2, scene.width)],
 		.face = BLOCK_FACE_DOWN,
-		.pixels = portal2_pixels,
+		.pixels = scene.tex_map.portal2,
 	};
 
 	RenderTexture2D minimap = LoadRenderTexture(scene.width * BLOCK_SIZE, scene.height * BLOCK_SIZE);

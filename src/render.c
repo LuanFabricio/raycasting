@@ -187,8 +187,7 @@ void render_entity(
 	const u32 src_x = render_get_texture_x(&plane_hit, face);
 
 	const render_texture_t tex_data = {
-		.pixels = scene->debug_texture,
-		// .pixels = scene->blocks[xy_to_index(5, 2, scene->width)].data,
+		.pixels = scene->tex_map.debug,
 		.coords = { src_x, y },
 		.strip = { strip_width, strip_height },
 		.size = { TEXTURE_SIZE, TEXTURE_SIZE },
