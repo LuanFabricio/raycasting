@@ -32,18 +32,23 @@ int main(void)
 	RenderTexture2D tex_game_image = LoadRenderTexture(SCREEN_WITDH, SCREEN_HEIGHT);
 
 	SetTargetFPS(70);
+	const char *reloading_text = "Reloading...";
+	const Vector2 text_size = MeasureTextEx(GetFontDefault(), reloading_text, 32.f, 3.2f);
 
 	while(!WindowShouldClose()) {
+		loop(scene, &game_image, &tex_game_image, &minimap, minimap_size);
+
 		if (IsKeyPressed(KEY_R)) {
+			BeginDrawing();
+				DrawText("Reloading...", 10, GetScreenHeight()-text_size.y-5, 32, WHITE);
+			EndDrawing();
+
 			dlclose(module);
 			system("make");
 
 			module = dlopen("build/core.so", RTLD_NOW);
 			loop = dlsym(module, "loop");
-			printf("Loop function updated.\n");
 		}
-
-		loop(scene, &game_image, &tex_game_image, &minimap, minimap_size);
 	}
 
 	return 0;
