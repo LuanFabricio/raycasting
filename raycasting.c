@@ -213,6 +213,7 @@ void load_entities(entity_array_t *entities)
 	entities->data[0].position.x = 5.5;
 	entities->data[0].position.y = 5.0;
 	entities->data[0].angle = 0.f;
+	entities->data[0].hp = 15;
 	entities->lenght = 1;
 }
 
@@ -240,6 +241,7 @@ void load_player(scene_t *scene)
 	scene->player.type = ENTITY_PLAYER;
 	scene->player.position.x = scene->width / 2.0f;
 	scene->player.position.y = scene->height / 2.0f;
+	scene->player.hp = 10;
 }
 
 scene_t* init_scene()

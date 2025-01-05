@@ -114,6 +114,7 @@ typedef struct {
 	vec2f32_t position;
 	f32 angle;
 	entity_e type;
+	i32 hp;
 } entity_t;
 
 typedef struct {
