@@ -160,9 +160,10 @@ typedef struct {
 } collision_block_t;
 
 typedef struct {
-	const entity_t *entity_ptr;
+	entity_t *entity_ptr;
 	vec2f32_t hit;
 	f32 dist;
+	u32 index;
 } collision_entity_t;
 
 typedef struct {

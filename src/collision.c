@@ -209,6 +209,7 @@ bool collision_hit_an_entity(const scene_t *scene, const vec2f32_t p1, const vec
 					collision_entity->entity_ptr = &scene->entities.data[i];
 					collision_entity->hit = current_hit;
 					collision_entity->dist = dist;
+					collision_entity->index = i;
 				}
 				have_hit = true;
 			}
