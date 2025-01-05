@@ -205,3 +205,24 @@ void scene_rotate_player_camera(scene_t *scene, const f32 angle)
 
 	scene->player.angle = new_angle;
 }
+
+void scene_player_shoot(scene_t *scene)
+{
+	vec2f32_t player_ray = vec2f32_from_angle(scene->player.angle);
+	vec2f32_scale(&player_ray, FAR_DISTANCE, &player_ray);
+	vec2f32_add(&player_ray, &scene->player.position, &player_ray);
+
+	collision_entity_t ce = {0};
+	const bool hit_entity = collision_hit_an_entity(scene, scene->player.position, player_ray, &ce);
+
+	if (!hit_entity) return;
+
+	// TODO: Add damage property on entity_t
+	ce.entity_ptr->hp -= 10;
+
+	if (ce.entity_ptr->hp <= 0) {
+		scene->entities.lenght--;
+		scene->entities.data[ce.index] = scene->entities.data[scene->entities.lenght];
+
+	}
+}

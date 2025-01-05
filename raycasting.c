@@ -108,6 +108,10 @@ void update_player(scene_t *scene, f32 delta_time)
 	if (IsKeyPressed(KEY_DOWN)) {
 		scene_place_teleport(scene, PORTAL_2);
 	}
+
+	if (IsKeyPressed(KEY_SPACE)) {
+		scene_player_shoot(scene);
+	}
 }
 
 void load_textures(scene_t *scene)
