@@ -123,12 +123,12 @@ typedef struct {
 } entity_array_t;
 
 typedef struct {
-	u32 bricks_green[TEXTURE_SIZE*TEXTURE_SIZE];
-	u32 cross_blue[TEXTURE_SIZE*TEXTURE_SIZE];
-	u32 brick_img[TEXTURE_SIZE*TEXTURE_SIZE];
-	u32 portal1[TEXTURE_SIZE*TEXTURE_SIZE];
-	u32 portal2[TEXTURE_SIZE*TEXTURE_SIZE];
-	u32 debug[TEXTURE_SIZE*TEXTURE_SIZE];
+	image_t bricks_green;
+	image_t cross_blue;
+	image_t brick_img;
+	image_t portal1;
+	image_t portal2;
+	image_t debug;
 } texture_map_t;
 
 typedef struct {

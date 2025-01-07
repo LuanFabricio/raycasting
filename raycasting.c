@@ -117,46 +117,28 @@ void update_player(scene_t *scene, f32 delta_time)
 void load_textures(scene_t *scene)
 {
 	Image brick_img = LoadImage("assets/textures/bricksx64.png");
-	Color *bricks_cs = LoadImageColors(brick_img);
-
 	Image portal1_img = LoadImage("assets/textures/portal1.png");
-	Color *portal1_cs = LoadImageColors(portal1_img);
 	Image portal2_img = LoadImage("assets/textures/portal2.png");
-	Color *portal2_cs = LoadImageColors(portal2_img);
 	Image debug_img = LoadImage("assets/textures/debug.png");
-	Color *debug_cs = LoadImageColors(debug_img);
+
+	scene->tex_map.brick_img = image_create(brick_img.width, brick_img.height, brick_img.data);
+	scene->tex_map.portal1 = image_create(portal1_img.width, portal1_img.height, portal1_img.data);
+	scene->tex_map.portal2 = image_create(portal2_img.width, portal2_img.height, portal2_img.data);
+	scene->tex_map.debug = image_create(debug_img.width, debug_img.height, debug_img.data);
+
+	scene->tex_map.bricks_green = image_create(TEXTURE_SIZE, TEXTURE_SIZE, malloc(sizeof(u32) * TEXTURE_SIZE * TEXTURE_SIZE));
+	scene->tex_map.cross_blue = image_create(TEXTURE_SIZE, TEXTURE_SIZE, malloc(sizeof(u32) * TEXTURE_SIZE * TEXTURE_SIZE));
 
 	for (u32 y = 0; y < TEXTURE_SIZE; y++) {
 		for (u32 x = 0; x < TEXTURE_SIZE; x++) {
 			const u32 tex_index = TEXTURE_SIZE * y + x;
 
-			scene->tex_map.cross_blue[tex_index] = (0xff << (8 * 3)) | (0xfe * (x != y && x != TEXTURE_SIZE - y)) << (8 *  2); // RED with a black cross.
-			scene->tex_map.bricks_green[tex_index] = (0xff << (8 * 3)) | (0xc0 * (x % 16 && y % 16)) << (8 *  1); // RED bricks.
-
-			scene->tex_map.brick_img[tex_index] = (bricks_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
-						| (bricks_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
-						| (bricks_cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
-						| (bricks_cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
-
-			scene->tex_map.portal1[tex_index] = (portal1_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
-						 | (portal1_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
-						 | (portal1_cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
-						 | (portal1_cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
-			scene->tex_map.portal2[tex_index] = (portal2_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
-						 | (portal2_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
-						 | (portal2_cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
-						 | (portal2_cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
-			scene->tex_map.debug[tex_index] = (debug_cs[tex_index].a << (8 * COLOR_CHANNEL_ALPHA))
-						 | (debug_cs[tex_index].r << (8 * COLOR_CHANNEL_RED))
-						 | (debug_cs[tex_index].g << (8 * COLOR_CHANNEL_GREEN))
-						 | (debug_cs[tex_index].b << (8 * COLOR_CHANNEL_BLUE));
+			scene->tex_map.cross_blue.pixel_buffer[tex_index] = (0xff << (8 * 3))
+				| (0xfe * (x != y && x != TEXTURE_SIZE - y)) << (8 *  2); // RED with a black cross.
+			scene->tex_map.bricks_green.pixel_buffer[tex_index] = (0xff << (8 * 3))
+				| (0xc0 * (x % 16 && y % 16)) << (8 *  1); // RED bricks.
 		}
 	}
-
-	UnloadImage(portal1_img);
-	UnloadImage(portal2_img);
-	UnloadImage(debug_img);
-	UnloadImage(brick_img);
 }
 
 void load_colors(color_map_t *color_map)
@@ -171,6 +153,10 @@ void load_colors(color_map_t *color_map)
 
 void load_blocks(scene_t *scene)
 {
+	for (u32 i = 0; i < scene->width * scene->height; i++) {
+		scene->blocks[i].block_type = BLOCK_EMPTY;
+	}
+
 	scene->blocks[0] = (block_t) {
 		.block_type = BLOCK_COLOR,
 		.data = &scene->color_map.blue,
@@ -199,15 +185,15 @@ void load_blocks(scene_t *scene)
 
 	scene->blocks[xy_to_index(5, 2, scene->width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
-		.data = scene->tex_map.cross_blue,
+		.data = scene->tex_map.cross_blue.pixel_buffer,
 	};
 	scene->blocks[xy_to_index(7, 2, scene->width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
-		.data = scene->tex_map.bricks_green,
+		.data = scene->tex_map.bricks_green.pixel_buffer,
 	};
 	scene->blocks[xy_to_index(9, 2, scene->width)] = (block_t) {
 		.block_type = BLOCK_BRICKS,
-		.data = scene->tex_map.brick_img,
+		.data = scene->tex_map.brick_img.pixel_buffer,
 	};
 }
 
@@ -228,14 +214,14 @@ void load_portals(scene_t *scene)
 		.block_src = &scene->blocks[xy_to_index(5, 2, scene->width)],
 		.block_dest = &scene->blocks[xy_to_index(9, 2, scene->width)],
 		.face = BLOCK_FACE_DOWN,
-		.pixels = scene->tex_map.portal1,
+		.pixels = scene->tex_map.portal1.pixel_buffer,
 	};
 	scene->portal2 = (portal_t){
 		.position = (vec2u32_t) { .x = 9, .y = 2 },
 		.block_src = &scene->blocks[xy_to_index(9, 2, scene->width)],
 		.block_dest = &scene->blocks[xy_to_index(5, 2, scene->width)],
 		.face = BLOCK_FACE_DOWN,
-		.pixels = scene->tex_map.portal2,
+		.pixels = scene->tex_map.portal1.pixel_buffer,
 	};
 }
 
