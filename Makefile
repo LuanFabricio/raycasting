@@ -13,7 +13,7 @@ $(TARGET): $(OBJS)
 	gcc $(flags) -fPIC -c $< -o $@
 
 main: all
-	gcc -g -o build/main.out main.c -lraylib
+	gcc $(flags) -o build/main.out main.c -lraylib
 
 run: all main
 	./build/main.out
