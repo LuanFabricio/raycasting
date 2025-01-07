@@ -1,5 +1,6 @@
 #include <math.h>
 #include <pthread.h>
+#include <stdio.h>
 
 #include "collision.h"
 #include "types.h"
@@ -23,7 +24,7 @@ void get_fov_plane(const vec2f32_t pos, const f32 angle, const f32 scale, vec2f3
 	vec2f32_add(&pos, &out[1], &out[1]);
 }
 
-u32 render_get_texture_x(const vec2f32_t *hit_point, const block_face_e block_face)
+u32 render_get_texture_x(const vec2f32_t *hit_point, const block_face_e block_face, const u32 width)
 {
 	vec2f32_t grid_point = {0};
 	vec2f32_floor(hit_point, &grid_point);
@@ -49,7 +50,7 @@ u32 render_get_texture_x(const vec2f32_t *hit_point, const block_face_e block_fa
 			break;
 	}
 
-	return floorf(u * TEXTURE_SIZE);
+	return floorf(u * width);
 }
 
 u32 render_get_texture_y(const u32 screen_y, const u32 render_y, const f32 text_height_prop)
@@ -88,7 +89,7 @@ void render_block_texture_on_image(
 	for (i32 y = y_start; y < y_end; y++) {
 		const u32 tex_y = render_get_texture_y(y, tex_data->coords.y, text_height_prop);
 		const u32 tex_point = render_get_texture_color_index(
-				tex_data->coords.x, tex_y, tex_data->size.y);
+				tex_data->coords.x, tex_y, tex_data->size.x);
 
 		const u32 color_u32 = color_apply_shadow(tex_data->pixels[tex_point], shadow);
 		image_draw_rectangle_color(image, screen_x, y, tex_data->strip.x, 1, color_u32);
@@ -102,18 +103,19 @@ void render_block_portal(
 	const u32 screen_height,
 	const f32 shadow,
 	const portal_t *portal_ptr,
-	const u32 *pixels,
+	const image_t* img,
 	image_t *image
 )
 {
 	const bool block_face_match_portal = portal_ptr->block_src == cb->block_ptr
 		&& portal_ptr->face == cb->face;
+	// TODO: Check the ray hit a portal pixel too
 	if (block_face_match_portal) {
 		render_texture_t tex_data = {
-			.coords = { render_get_texture_x(&cb->hit, cb->face), y },
+			.coords = { render_get_texture_x(&cb->hit, cb->face, img->width), y },
 			.strip = { strip_width, strip_height },
-			.size = { TEXTURE_SIZE, TEXTURE_SIZE },
-			.pixels = pixels,
+			.size = { img->width, img->height },
+			.pixels = img->pixel_buffer,
 		};
 		render_block_texture_on_image(
 			&tex_data,
@@ -146,7 +148,7 @@ void render_blocks(
 		} break;
 
 		case BLOCK_BRICKS: {
-			const u32 src_x = render_get_texture_x(&cb->hit, cb->face);
+			const u32 src_x = render_get_texture_x(&cb->hit, cb->face, TEXTURE_SIZE);
 			const render_texture_t tex_data = {
 				.pixels = cb->block_ptr->data,
 				.coords = { src_x, y },
@@ -164,8 +166,8 @@ void render_blocks(
 			break;
 	}
 
-	render_block_portal(cb, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal1, scene->tex_map.portal1, image);
-	render_block_portal(cb, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal2, scene->tex_map.portal2, image);
+	render_block_portal(cb, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal1, &scene->tex_map.portal1, image);
+	render_block_portal(cb, x, y, strip_width, strip_height, screen_height, shadow, &scene->portal2, &scene->tex_map.portal2, image);
 }
 
 void render_entity(
@@ -185,13 +187,13 @@ void render_entity(
 	const block_face_e face = (scene->player.angle < PI) ? BLOCK_FACE_DOWN : BLOCK_FACE_UP;
 	vec2f32_t plane_hit = {0};
 	vec2f32_rot(&ce->hit, PI, &plane_hit);
-	const u32 src_x = render_get_texture_x(&plane_hit, face);
+	const u32 src_x = render_get_texture_x(&plane_hit, face, scene->tex_map.debug.width);
 
 	const render_texture_t tex_data = {
-		.pixels = scene->tex_map.debug,
+		.pixels = scene->tex_map.debug.pixel_buffer,
 		.coords = { src_x, y },
 		.strip = { strip_width, strip_height },
-		.size = { TEXTURE_SIZE, TEXTURE_SIZE },
+		.size = { scene->tex_map.debug.width, scene->tex_map.debug.height },
 	};
 	render_block_texture_on_image(
 		&tex_data,
