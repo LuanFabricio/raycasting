@@ -57,9 +57,9 @@ u32 render_get_texture_y(const u32 screen_y, const u32 render_y, const f32 text_
 	return floorf((screen_y - render_y) * text_height_prop);
 }
 
-u32 render_get_texture_color_index(const u32 tex_x, const u32 tex_y, const u32 tex_height)
+u32 render_get_texture_color_index(const u32 tex_x, const u32 tex_y, const u32 tex_width)
 {
-	return tex_y * tex_height + tex_x;
+	return tex_y * tex_width + tex_x;
 }
 
 void render_block_color_on_image(
