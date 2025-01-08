@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "collision.h"
+#include "scene.h"
 #include "types.h"
 #include "vec2f32.h"
 #include "utils.h"
@@ -103,19 +104,30 @@ void render_block_portal(
 	const u32 screen_height,
 	const f32 shadow,
 	const portal_t *portal_ptr,
-	const image_t* img,
+	const image_t* portal_img,
 	image_t *image
 )
 {
 	const bool block_face_match_portal = portal_ptr->block_src == cb->block_ptr
 		&& portal_ptr->face == cb->face;
 	// TODO: Check the ray hit a portal pixel too
+	// vec2f32_t portal_center = scene_offset_to_center_block_face(
+	// 		&CAST_TYPE(vec2f32_t, cb->position), cb->face, 0.5f);
+	// portal_center.x += cb->position.x;
+	// portal_center.y += cb->position.y;
+	// f32 prop_width = (f32)(portal_img->width) / TEXTURE_SIZE;
+	// const bool hit_portal = cb->hit.x > (portal_center.x - prop_width / 2)
+	// 	&& cb->hit.x < (portal_center.x + prop_width / 2);
+
 	if (block_face_match_portal) {
 		render_texture_t tex_data = {
-			.coords = { render_get_texture_x(&cb->hit, cb->face, img->width), y },
+			.coords = {
+				render_get_texture_x(&cb->hit, cb->face, portal_img->width),
+				y,
+			},
 			.strip = { strip_width, strip_height },
-			.size = { img->width, img->height },
-			.pixels = img->pixel_buffer,
+			.size = { portal_img->width, portal_img->height },
+			.pixels = portal_img->pixel_buffer,
 		};
 		render_block_texture_on_image(
 			&tex_data,
