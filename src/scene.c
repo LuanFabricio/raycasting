@@ -25,6 +25,31 @@ void scene_get_block_points(u32 x, u32 y, float scale, vec2f32_t *out)
 	out[3].y = (y+1) * scale;
 }
 
+vec2f32_t scene_offset_to_center_block_face(const vec2f32_t *position, const block_face_e face, f32 offset_scale)
+{
+	vec2f32_t offset_vec = { 0.5f, 0.5f };
+	vec2f32_add(&offset_vec, position, &offset_vec);
+
+	switch (face) {
+		case BLOCK_FACE_UP: {
+			offset_vec.y -= offset_scale;
+		} break;
+		case BLOCK_FACE_RIGHT: {
+			offset_vec.x += offset_scale;
+		} break;
+		case BLOCK_FACE_DOWN: {
+			offset_vec.y += offset_scale;
+		} break;
+		case BLOCK_FACE_LEFT: {
+			offset_vec.x -= offset_scale;
+		} break;
+		default:
+		      break;
+	}
+
+	return offset_vec;
+}
+
 void scene_teleport_player(scene_t *scene, const collision_block_t *collision_block)
 {
 	const bool hit_portal1_block = collision_block->block_ptr == scene->portal1.block_src;
@@ -59,24 +84,10 @@ void scene_teleport_player(scene_t *scene, const collision_block_t *collision_bl
 	player_ptr->angle += angle;
 
 	// TODO: Use the momentum instead of this offset
-	const f32 offset = 0.75f;
 	block_face_e dest_face = portal_dest->face;
-	switch (dest_face) {
-		case BLOCK_FACE_UP: {
-			player_ptr->position.y -= offset;
-		} break;
-		case BLOCK_FACE_RIGHT: {
-			player_ptr->position.x += offset;
-		} break;
-		case BLOCK_FACE_DOWN: {
-			player_ptr->position.y += offset;
-		} break;
-		case BLOCK_FACE_LEFT: {
-			player_ptr->position.x -= offset;
-		} break;
-		default:
-				      break;
-	}
+	const f32 offset = 0.25f;
+	player_ptr->position = scene_offset_to_center_block_face(
+			&player_ptr->position, dest_face, offset);
 }
 
 void scene_place_teleport(scene_t *scene, portal_e portal_type)
