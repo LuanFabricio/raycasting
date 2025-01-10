@@ -36,6 +36,16 @@ typedef struct {
 } image_t;
 
 typedef struct {
+	image_t *img_ptr;
+	vec2u32_t sprite_size;
+} spritesheet_t;
+
+typedef struct {
+	const spritesheet_t spritesheet;
+	const u32 sprites_len;
+} sprite_animation_t;
+
+typedef struct {
 	f32 x, y;
 	u32 w, h;
 } box_t;
@@ -129,6 +139,8 @@ typedef struct {
 	image_t portal1;
 	image_t portal2;
 	image_t debug;
+	image_t debug_spritesheet_img;
+	spritesheet_t debug_spritesheet;
 } texture_map_t;
 
 typedef struct {
