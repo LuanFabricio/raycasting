@@ -75,3 +75,15 @@ void image_append_image(image_t* target, const image_t* src, vec2u32_t position)
 		}
 	}
 }
+
+// TODO: Try SIMD
+void image_crop_to_buffer(const image_t *src, const vec2u32_t pos, const vec2u32_t size, u32* buffer)
+{
+	printf("(%u, %u) -> (%u, %u)\n", pos.x, pos.y, pos.x+size.x, pos.y+size.y);
+	for (u32 y = 0; y < size.y; y++) {
+		for (u32 x = 0; x < size.x; x++) {
+			const u32 color = src->pixel_buffer[xy_to_index(x+pos.x, y+pos.y, src->width)];
+			buffer[xy_to_index(x, y, size.x)] = color;
+		}
+	}
+}
