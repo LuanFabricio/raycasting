@@ -1,5 +1,5 @@
 dependencies = $(shell find src/ -type f -name '*.c') raycasting.c
-flags = -O2 -Wall -Wextra
+flags = -O2 -Wall -Wextra -Wno-strict-aliasing
 
 OBJS = $(dependencies:.c=.o)
 TARGET = core.so
