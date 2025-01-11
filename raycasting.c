@@ -4,6 +4,7 @@
 #include "raylib.h"
 
 #include "src/image.h"
+#include "src/spritesheet.h"
 #include "src/types.h"
 #include "src/utils.h"
 #include "src/vec2f32.h"
@@ -120,10 +121,14 @@ void load_textures(scene_t *scene)
 	Image portal2_img = LoadImage("assets/textures/portal2.png");
 	Image debug_img = LoadImage("assets/textures/debug.png");
 
+	Image debug_sprite_sheet = LoadImage("assets/textures/debug-spritesheet.png");
+
 	scene->tex_map.brick_img = image_create(brick_img.width, brick_img.height, brick_img.data);
 	scene->tex_map.portal1 = image_create(portal1_img.width, portal1_img.height, portal1_img.data);
 	scene->tex_map.portal2 = image_create(portal2_img.width, portal2_img.height, portal2_img.data);
 	scene->tex_map.debug = image_create(debug_img.width, debug_img.height, debug_img.data);
+	scene->tex_map.debug_spritesheet_img = image_create(debug_sprite_sheet.width, debug_sprite_sheet.height, debug_sprite_sheet.data);
+	scene->tex_map.debug_spritesheet = spritesheet_create(&scene->tex_map.debug_spritesheet_img, (vec2u32_t){ 64, 64 });
 
 	scene->tex_map.bricks_green = image_create(TEXTURE_SIZE, TEXTURE_SIZE, malloc(sizeof(u32) * TEXTURE_SIZE * TEXTURE_SIZE));
 	scene->tex_map.cross_blue = image_create(TEXTURE_SIZE, TEXTURE_SIZE, malloc(sizeof(u32) * TEXTURE_SIZE * TEXTURE_SIZE));

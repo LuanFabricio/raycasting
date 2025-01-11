@@ -1,9 +1,11 @@
 #include <math.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "collision.h"
 #include "scene.h"
+#include "spritesheet.h"
 #include "types.h"
 #include "vec2f32.h"
 #include "utils.h"
@@ -196,22 +198,31 @@ void render_entity(
 
 	const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
 
+	// BUG: This makes the sprites wider when the player is on the left or the right of the map
 	const block_face_e face = (scene->player.angle < PI) ? BLOCK_FACE_DOWN : BLOCK_FACE_UP;
 	vec2f32_t plane_hit = {0};
 	vec2f32_rot(&ce->hit, PI, &plane_hit);
-	const u32 src_x = render_get_texture_x(&plane_hit, face, scene->tex_map.debug.width);
 
+	// TODO: Test spritesheet usage
+	u32 *buffer = malloc(sizeof(u32) * scene->tex_map.debug_spritesheet.sprite_size.x * scene->tex_map.debug_spritesheet.sprite_size.y);
+	image_t buffer_image = image_create(scene->tex_map.debug_spritesheet.sprite_size.x,
+			scene->tex_map.debug_spritesheet.sprite_size.y, buffer);
+	spritesheet_get_sprite(&scene->tex_map.debug_spritesheet, (vec2u32_t){0, 0}, &buffer_image);
+
+	const u32 src_x = render_get_texture_x(&plane_hit, face, buffer_image.width);
 	const render_texture_t tex_data = {
+		// .pixels = scene->tex_map.debug.pixel_buffer,
 		.pixels = scene->tex_map.debug.pixel_buffer,
 		.coords = { src_x, y },
 		.strip = { strip_width, strip_height },
-		.size = { scene->tex_map.debug.width, scene->tex_map.debug.height },
+		.size = { buffer_image.width, buffer_image.height, },
+		// .size = { scene->tex_map.debug.width, scene->tex_map.debug.height, },
 	};
 	render_block_texture_on_image(
 		&tex_data,
 		x*strip_width, screen_height,
 		shadow, image);
-
+	free(buffer);
 }
 
 void render_on_image(
@@ -233,6 +244,9 @@ void render_on_image(
 	if (should_render_cb) {
 		render_blocks(x, strip_width, screen_height, scene, player_ray, &cb, image);
 	} else if (should_render_ce) {
+		// BUG: Some weird bug with entity texture (128x128)
+		// Map every face?
+		// Weird behavior between the entity angle and player angle
 		render_entity(x, strip_width, screen_height, scene, player_ray, &ce, image);
 	}
 }
