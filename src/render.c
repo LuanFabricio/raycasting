@@ -211,12 +211,12 @@ void render_entity(
 
 	const u32 src_x = render_get_texture_x(&plane_hit, face, buffer_image.width);
 	const render_texture_t tex_data = {
+		.pixels = buffer_image.pixel_buffer,
 		// .pixels = scene->tex_map.debug.pixel_buffer,
-		.pixels = scene->tex_map.debug.pixel_buffer,
 		.coords = { src_x, y },
 		.strip = { strip_width, strip_height },
+		// .size = { buffer_image.width, buffer_image.height, },
 		.size = { buffer_image.width, buffer_image.height, },
-		// .size = { scene->tex_map.debug.width, scene->tex_map.debug.height, },
 	};
 	render_block_texture_on_image(
 		&tex_data,
