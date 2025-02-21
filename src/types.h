@@ -38,11 +38,15 @@ typedef struct {
 typedef struct {
 	image_t *img_ptr;
 	vec2u32_t sprite_size;
+	vec2u32_t sprite_amount;
 } spritesheet_t;
 
 typedef struct {
 	const spritesheet_t spritesheet;
 	const u32 sprites_len;
+	const u32 current_sprite;
+	const u32 timer;
+	const u32 delay;
 } sprite_animation_t;
 
 typedef struct {
