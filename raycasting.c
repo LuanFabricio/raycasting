@@ -4,6 +4,7 @@
 #include "raylib.h"
 
 #include "src/image.h"
+#include "src/sprite_animation.h"
 #include "src/spritesheet.h"
 #include "src/types.h"
 #include "src/utils.h"
@@ -143,6 +144,10 @@ void load_textures(scene_t *scene)
 				| (0xc0 * (x % 16 && y % 16)) << (8 *  1); // RED bricks.
 		}
 	}
+
+	scene->tex_map.animation = sprite_animation_create(
+			scene->tex_map.debug_spritesheet, 5);
+
 }
 
 void load_colors(color_map_t *color_map)
@@ -201,13 +206,17 @@ void load_blocks(scene_t *scene)
 	};
 }
 
-void load_entities(entity_array_t *entities)
+void load_entities(entity_array_t *entities, const texture_map_t* tex_map)
 {
 	entities->data[0].type = ENTITY_ENEMY;
 	entities->data[0].position.x = 5.5;
 	entities->data[0].position.y = 5.0;
 	entities->data[0].angle = 0.f;
 	entities->data[0].hp = 15;
+
+	entities->sprites[0].type = ENTITY_SPRITE_ANIMATION;
+	entities->sprites[0].sprite = (void*)&tex_map->animation;
+
 	entities->lenght = 1;
 }
 
@@ -249,7 +258,7 @@ scene_t* init_scene()
 
 	load_blocks(scene);
 
-	load_entities(&scene->entities);
+	load_entities(&scene->entities, &scene->tex_map);
 
 	load_portals(scene);
 

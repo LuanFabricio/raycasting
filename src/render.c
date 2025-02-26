@@ -2,9 +2,11 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "collision.h"
 #include "scene.h"
+#include "sprite_animation.h"
 #include "spritesheet.h"
 #include "types.h"
 #include "vec2f32.h"
@@ -186,29 +188,75 @@ void render_blocks(
 
 void render_entity(
 	const u32 x, const u32 strip_width, const u32 screen_height,
-	const scene_t *scene,
+	scene_t *scene,
 	const vec2f32_t player_ray,
 	const collision_entity_t *ce,
 	image_t* image
 )
 {
-	const f32 perp_wall_dist = calc_perp_dist(&ce->entity_ptr->position, &scene->player.position, &player_ray);
+	const f32 perp_wall_dist = calc_perp_dist(
+			&ce->entity_ptr->position, &scene->player.position, &player_ray);
 	const f32 strip_height = (f32)screen_height / perp_wall_dist;
 	const f32 y = (screen_height - strip_height) * 0.5f;
 
 	const f32 shadow = MIN(1.0f/perp_wall_dist*4.0f, 1.0f);
 
-	// BUG: This makes the sprites wider when the player is on the left or the right of the map
+	// BUG: This makes the sprites wider when the player is on the left or the right
+	// of the map
 	const block_face_e face = (scene->player.angle < PI) ? BLOCK_FACE_DOWN : BLOCK_FACE_UP;
 	vec2f32_t plane_hit = {0};
 	vec2f32_rot(&ce->hit, PI, &plane_hit);
 
 	// TODO: Test spritesheet usage
-	u32 *buffer = malloc(sizeof(u32) * scene->tex_map.debug_spritesheet.sprite_size.x * scene->tex_map.debug_spritesheet.sprite_size.y);
-	image_t buffer_image = image_create(scene->tex_map.debug_spritesheet.sprite_size.x,
-			scene->tex_map.debug_spritesheet.sprite_size.y, buffer);
-	spritesheet_get_sprite(&scene->tex_map.debug_spritesheet, (vec2u32_t){0, 0}, &buffer_image);
 
+	entity_sprite_t *es = &scene->entities.sprites[ce->index];
+
+	u32 *buffer = 0;/*malloc(sizeof(u32) * sa->spritesheet.sprite_size.x
+			* sa->spritesheet.sprite_size.y);*/
+	image_t buffer_image = {0}; /*image_create(
+		sa->spritesheet.sprite_size.x,
+		sa->spritesheet.sprite_size.y, buffer);*/
+	if (es->type == ENTITY_SPRITE_ANIMATION) {
+		sprite_animation_t *sa = es->sprite;
+
+		buffer = malloc(sizeof(u32) * sa->spritesheet.sprite_size.x
+			* sa->spritesheet.sprite_size.y);
+		buffer_image = image_create(
+			sa->spritesheet.sprite_size.x,
+			sa->spritesheet.sprite_size.y, buffer);
+
+		sprite_animation_next_sprite(es->sprite);
+		sprite_animation_image(es->sprite, &buffer_image);
+	} else {
+		return;
+	}
+	/*
+	static u32 next_update = 0;
+	const u32 delay = 3;
+	static u32 i = 0;
+	static u32 j = 0;
+	spritesheet_get_sprite(
+			&scene->tex_map.debug_spritesheet, (vec2u32_t){i, j}, &buffer_image);
+	if (next_update <= time(NULL)) {
+		i = i+1;
+		next_update = time(NULL) + delay;
+	}
+
+	if (i >= scene->tex_map.debug_spritesheet.sprite_amount.x) {
+		i = 0;
+		j += 1;
+	}
+
+	if (j >= scene->tex_map.debug_spritesheet.sprite_amount.y) {
+		j = 0;
+	}
+
+	printf("%u, %u (%u, %u)\n", i, j, 2, 2);
+
+	printf("Delay: %u\n", next_update);
+	printf("Time:  %u\n", (u32)time(0));
+
+	*/
 	const u32 src_x = render_get_texture_x(&plane_hit, face, buffer_image.width);
 	const render_texture_t tex_data = {
 		.pixels = buffer_image.pixel_buffer,
@@ -222,12 +270,12 @@ void render_entity(
 		&tex_data,
 		x*strip_width, screen_height,
 		shadow, image);
-	free(buffer);
+	if (buffer != 0) free(buffer);
 }
 
 void render_on_image(
 	const u32 x, const u32 strip_width, const u32 screen_height,
-	const scene_t *scene,
+	scene_t *scene,
 	const vec2f32_t player_ray, const vec2f32_t ray,
 	image_t* image
 )
@@ -255,7 +303,7 @@ void* _render_slice(void* data)
 {
 	render_data_t *slice_data = (render_data_t*)data;
 
-	const scene_t *scene = slice_data->base_data->scene;
+	scene_t *scene = slice_data->base_data->scene;
 	const vec2f32_t *fov_plane = slice_data->base_data->fov_plane;
 	const vec2f32_t player_ray = slice_data->base_data->player_ray;
 
@@ -274,7 +322,7 @@ void* _render_slice(void* data)
 }
 
 void render_scene_on_image(
-	const scene_t *scene,
+	scene_t *scene,
 	const u32 screen_width, const u32 screen_height,
 	image_t* image
 )

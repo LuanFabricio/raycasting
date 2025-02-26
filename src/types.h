@@ -36,13 +36,17 @@ typedef struct {
 } image_t;
 
 typedef struct {
-	image_t *img_ptr;
+	const image_t *img_ptr;
 	vec2u32_t sprite_size;
+	vec2u32_t sprite_amount;
 } spritesheet_t;
 
 typedef struct {
-	const spritesheet_t spritesheet;
-	const u32 sprites_len;
+	spritesheet_t spritesheet;
+	vec2u32_t sprites_len;
+	vec2u32_t current_sprite;
+	u32 timer;
+	u32 delay;
 } sprite_animation_t;
 
 typedef struct {
@@ -127,8 +131,19 @@ typedef struct {
 	i32 hp;
 } entity_t;
 
+typedef enum {
+	ENTITY_SPRITE_ANIMATION	  = 0x00,
+	ENTITY_SPRITE_SPRITESHEET = 0x01,
+} entity_sprite_e;
+
+typedef struct {
+	entity_sprite_e type;
+	void* sprite;
+} entity_sprite_t;
+
 typedef struct {
 	entity_t data[MAX_ENTITIES];
+	entity_sprite_t sprites[MAX_ENTITIES];
 	u32 lenght;
 } entity_array_t;
 
@@ -141,6 +156,7 @@ typedef struct {
 	image_t debug;
 	image_t debug_spritesheet_img;
 	spritesheet_t debug_spritesheet;
+	sprite_animation_t animation;
 } texture_map_t;
 
 typedef struct {
@@ -181,7 +197,7 @@ typedef struct {
 typedef struct {
 	const u32 strip_width;
 	const u32 screen_height;
-	const scene_t* scene;
+	scene_t* scene;
 
 	const vec2f32_t *fov_plane;
 	const vec2f32_t player_ray;
