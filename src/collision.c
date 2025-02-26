@@ -183,7 +183,7 @@ bool collision_hit_a_block(const scene_t *scene, const vec2f32_t p1, const vec2f
 	return have_hit;
 }
 
-bool collision_hit_an_entity(const scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, collision_entity_t *collision_entity)
+bool collision_hit_an_entity(scene_t *scene, const vec2f32_t p1, const vec2f32_t p2, collision_entity_t *collision_entity)
 {
 	bool have_hit = false;
 	f32 dist = FLT_MAX;
