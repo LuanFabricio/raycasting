@@ -36,7 +36,7 @@ typedef struct {
 } image_t;
 
 typedef struct {
-	image_t *img_ptr;
+	const image_t *img_ptr;
 	vec2u32_t sprite_size;
 	vec2u32_t sprite_amount;
 } spritesheet_t;
